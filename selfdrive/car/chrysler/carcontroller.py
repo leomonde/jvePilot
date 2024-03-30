@@ -42,11 +42,18 @@ class CarController:
     self.autoFollowDistanceLock = None
     self.button_frame = 0
     self.last_target = 0
+    self.last_available = False
+    self.delay_lkas_active_until = 0
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
 
-    lkas_active = CC.latActive and self.lkas_control_bit_prev
+    # delay lkas if just enabling ACC
+    if CS.available and CS.available != self.last_available:
+      self.delay_lkas_active_until = self.frame + 200
+    self.last_available = CS.available
+
+    lkas_active = CC.latActive and self.lkas_control_bit_prev and self.frame > self.delay_lkas_active_until
 
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
