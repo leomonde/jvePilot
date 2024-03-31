@@ -49,11 +49,11 @@ class CarController:
     can_sends = []
 
     # delay lkas if just enabling ACC
-    if CS.available and CS.available != self.last_available:
+    if CS.out.cruiseState.available and CS.out.cruiseState.available != self.last_available:
       self.delay_lkas_active_until = self.frame + 200
-    self.last_available = CS.available
+    self.last_available = CS.out.cruiseState.available
 
-    lkas_active = CC.latActive and self.lkas_control_bit_prev and self.frame > self.delay_lkas_active_until
+    lkas_active = CC.latActive and self.lkas_control_bit_prev and (CS.out.cruiseState.enabled or self.frame > self.delay_lkas_active_until)
 
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
