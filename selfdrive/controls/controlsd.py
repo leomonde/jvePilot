@@ -694,7 +694,7 @@ class Controls:
     CC.jvePilotState.carState = CS.jvePilotCarState
     CC.jvePilotState.carControl = self.jvePilotState.carControl
 
-    entry = not self.events.contains(ET.NO_ENTRY) or self.events.contains(ET.USER_DISABLE)
+    entry = not self.events.contains(ET.NO_ENTRY)
     CC.jvePilotState.carControl.aolcReady = entry and CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
 
     # Check which actuators can be enabled
