@@ -23,7 +23,7 @@ from openpilot.selfdrive.car.car_helpers import get_car, get_startup_event, get_
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from openpilot.selfdrive.controls.lib.alertmanager import AlertManager, set_offroad_alert
 from openpilot.selfdrive.controls.lib.drive_helpers import VCruiseHelper, clip_curvature
-from openpilot.selfdrive.controls.lib.events import Events, ET
+from openpilot.selfdrive.controls.lib.events import Events, ET, EVENTS
 from openpilot.selfdrive.controls.lib.latcontrol import LatControl, MIN_LATERAL_CONTROL_SPEED
 from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
 from openpilot.selfdrive.controls.lib.latcontrol_angle import LatControlAngle, STEER_ANGLE_SATURATION_THRESHOLD
@@ -694,8 +694,10 @@ class Controls:
     CC.jvePilotState.carState = CS.jvePilotCarState
     CC.jvePilotState.carControl = self.jvePilotState.carControl
 
-    entry = not self.events.contains(ET.NO_ENTRY)
-    CC.jvePilotState.carControl.aolcReady = entry and CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
+    no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
+    ignored_entries = list(filter(lambda e: e not in [EventName.buttonCancel, EventName.pedalPressed], no_entries))
+    valid_aolc_state = len(ignored_entries) == 0
+    CC.jvePilotState.carControl.aolcReady = valid_aolc_state and CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
 
     # Check which actuators can be enabled
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
