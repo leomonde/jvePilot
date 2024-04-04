@@ -43,6 +43,7 @@ def manager_init() -> None:
     ("jvePilot.settings.autoFollow.speed3-4Bars", "65"),
     ("jvePilot.settings.audioAlertOnSteeringLoss", "1"),
     ("jvePilot.settings.steer.aolc", "0"),
+    ("jvePilot.settings.steer.aolcDelay", "100"),
     ("jvePilot.settings.steer.noMinimum", "0"),
     ("jvePilot.settings.deviceOffset", "0.00"),
     ("jvePilot.settings.visionOnly", "0"),

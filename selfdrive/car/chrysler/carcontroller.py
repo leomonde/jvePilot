@@ -42,18 +42,20 @@ class CarController:
     self.autoFollowDistanceLock = None
     self.button_frame = 0
     self.last_target = 0
-    self.last_available = False
+    self.last_lkas_active = False
     self.delay_lkas_active_until = 0
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
 
-    # delay lkas if just enabling ACC
-    if CS.out.cruiseState.available and CS.out.cruiseState.available != self.last_available:
-      self.delay_lkas_active_until = self.frame + 200
-    self.last_available = CS.out.cruiseState.available
+    lkas_active = CC.latActive
 
-    lkas_active = CC.latActive and self.lkas_control_bit_prev and (CS.out.cruiseState.enabled or self.frame > self.delay_lkas_active_until)
+    # always delay lkas when it becomes active
+    if lkas_active and lkas_active != self.last_lkas_active:
+      self.delay_lkas_active_until = self.frame + self.cachedParams.get_float('jvePilot.settings.steer.aolcDelay', 100)
+    self.last_lkas_active = lkas_active
+
+    lkas_active = lkas_active and self.lkas_control_bit_prev and (CS.out.cruiseState.enabled or self.frame > self.delay_lkas_active_until)
 
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0

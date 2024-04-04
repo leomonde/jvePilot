@@ -693,7 +693,9 @@ class Controls:
 
     CC.jvePilotState.carState = CS.jvePilotCarState
     CC.jvePilotState.carControl = self.jvePilotState.carControl
-    CC.jvePilotState.carControl.aolcReady = not self.events.contains(ET.NO_ENTRY) and CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
+
+    entry = not self.events.contains(ET.NO_ENTRY) or self.events.contains(ET.USER_DISABLE)
+    CC.jvePilotState.carControl.aolcReady = entry and CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
 
     # Check which actuators can be enabled
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill

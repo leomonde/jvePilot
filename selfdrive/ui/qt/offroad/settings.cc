@@ -132,12 +132,22 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                                   this,
                                   "../assets/jvepilot/settings/icon_misc.png",
                                   &miscConfigs));
+
   // Always One Lateral Control
+  QList<struct ConfigButton> aolcConfigs = {
+    { "jvePilot.settings.steer.aolcDelay",
+      0, 200,
+      "AOLC Control Delay",
+      "Default: 100, Min: 0, Max: 200\n"
+        "Delay between when AOLC is available and when lateral commands will be sent"
+    }
+  };
   addItem(new ParamControl("jvePilot.settings.steer.aolc",
                            "BETA: Always On Lateral Control",
                            "When enabled and ACC is enabled, jvePilot will steer even if ACC/jvePilot isn't active",
                            "../assets/img_chffr_wheel.png",
-                           this));
+                           this,
+                           &aolcConfigs));
 
   // Minimum Steer Check
   addItem(new ParamControl("jvePilot.settings.steer.noMinimum",
