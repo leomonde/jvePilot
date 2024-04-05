@@ -98,6 +98,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"jvePilot.settings.audioAlertOnSteeringLoss", PERSISTENT},
     {"jvePilot.settings.steer.aolc", PERSISTENT},
     {"jvePilot.settings.steer.aolcDelay", PERSISTENT},
+    {"jvePilot.settings.steer.aolcSpeedDelay", PERSISTENT},
     {"jvePilot.settings.steer.noMinimum", PERSISTENT},
     {"jvePilot.settings.deviceOffset", PERSISTENT},
     {"jvePilot.settings.reverseAccSpeedChange", PERSISTENT},

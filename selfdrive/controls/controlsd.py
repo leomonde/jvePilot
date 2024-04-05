@@ -673,7 +673,7 @@ class Controls:
 
   def has_invalid_aolc_states(self):
     no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
-    return any(e not in [EventName.buttonCancel, EventName.pedalPressed] for e in no_entries)
+    return any(e not in [EventName.buttonCancel, EventName.pedalPressed, EventName.resumeBlocked] for e in no_entries)
 
   def state_control(self, CS):
     """Given the state, this function returns a CarControl packet"""

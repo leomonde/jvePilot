@@ -43,20 +43,28 @@ class CarController:
     self.button_frame = 0
     self.last_target = 0
     self.last_lkas_active = False
-    self.delay_lkas_active_until = 0
+    self.delay_lkas_active_until = None
+    self.delay_lkas_speed_change = None
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
 
     lkas_active = CC.latActive
 
-    # always delay lkas when it becomes active
+    # delay lkas when it becomes active
     if lkas_active and lkas_active != self.last_lkas_active:
-      self.delay_lkas_active_until = self.frame + self.cachedParams.get_float('jvePilot.settings.steer.aolcDelay', 100)
+      self.delay_lkas_active_until = self.frame + self.cachedParams.get_float('jvePilot.settings.steer.aolcDelay', 1000)
+      self.delay_lkas_speed_change = CS.out.vEgoRaw 
     self.last_lkas_active = lkas_active
+    if lkas_active and self.delay_lkas_speed_change is not None:
+      delaying = self.frame < self.delay_lkas_active_until or abs(CS.out.vEgoRaw - self.delay_lkas_speed_change) < self.cachedParams.get_float('jvePilot.settings.steer.aolcSpeedDelay', 1000)
+      if delaying:
+        lkas_active = False
+      else:
+        self.delay_lkas_speed_change = None
 
-    lkas_active = lkas_active and self.lkas_control_bit_prev and (CS.out.cruiseState.enabled or self.frame > self.delay_lkas_active_until)
-
+    lkas_active = lkas_active and self.lkas_control_bit_prev
+    
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
 
@@ -115,7 +123,17 @@ class CarController:
       self.lkas_control_bit_prev = lkas_control_bit
 
       # steer torque
-      apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
+      if CS.out.vEgo < 1.:  # limit steer
+        # TODO: Save and restore these instead of hard coding the values
+        self.params.STEER_DELTA_UP = 1
+        self.params.STEER_DELTA_DOWN = 1
+        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps,
+                                                     self.params)
+        self.params.STEER_DELTA_UP = 3
+        self.params.STEER_DELTA_DOWN = 3
+      else:
+        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
+
       if not lkas_active or not lkas_control_bit:
         apply_steer = 0
       self.apply_steer_last = apply_steer
