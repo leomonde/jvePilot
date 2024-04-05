@@ -123,7 +123,7 @@ class CarController:
       self.lkas_control_bit_prev = lkas_control_bit
 
       # steer torque
-      if CS.out.vEgo < 1.:  # limit steer
+      if CS.out.vEgo < 2.:  # limit steer
         # TODO: Save and restore these instead of hard coding the values
         self.params.STEER_DELTA_UP = 1
         self.params.STEER_DELTA_DOWN = 1
