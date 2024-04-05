@@ -667,14 +667,13 @@ class Controls:
     if self.active:
       self.current_alert_types.append(ET.WARNING)
     elif self.jvePilotState.carControl.aolcReady:
+      self.current_alert_types.append(ET.WARNING)
       if self.has_invalid_aolc_states():
         self.current_alert_types.append(ET.NO_ENTRY)
-      else:
-        self.current_alert_types.append(ET.WARNING)
 
   def has_invalid_aolc_states(self):
     no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
-    return len(list(filter(lambda e: e not in [EventName.buttonCancel, EventName.pedalPressed], no_entries))) != 0
+    return any(e not in [EventName.buttonCancel, EventName.pedalPressed] for e in no_entries)
 
   def state_control(self, CS):
     """Given the state, this function returns a CarControl packet"""
@@ -704,7 +703,7 @@ class Controls:
     # Check which actuators can be enabled
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
 
-    CC.jvePilotState.carControl.aolcReady = not standstill and CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
+    CC.jvePilotState.carControl.aolcReady = CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
     aolcActive = CC.jvePilotState.carControl.aolcReady and not self.has_invalid_aolc_states()
 
     CC.latActive = (self.active or aolcActive) and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
