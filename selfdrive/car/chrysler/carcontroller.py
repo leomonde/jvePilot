@@ -92,7 +92,7 @@ class CarController:
 
     # steering
     new_steer = int(round(CC.actuators.steer * self.params.STEER_MAX))
-    if self.frame % self.params.STEER_STEP == 0 or abs(new_steer - int(self.apply_steer_last) > 30):
+    if self.frame % self.params.STEER_STEP == 0:  # or abs(new_steer - int(self.apply_steer_last) > 30):
       # TODO: can we make this more sane? why is it different for all the cars?
       high_steer = self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED
       lkas_control_bit = self.lkas_control_bit_prev

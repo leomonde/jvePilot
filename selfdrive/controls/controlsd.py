@@ -561,7 +561,7 @@ class Controls:
            if ps.safetyModel not in IGNORED_SAFETY_MODES):
       self.mismatch_counter += 1
 
-    if self.jvePilotState.notifyUi:
+    if self.jvePilotState.notifyUi or self.sm.frame == 25:
       self.ui_notify()
     elif self.sm.updated['jvePilotUIState']:
       self.jvePilotState.carControl.autoFollow = self.sm['jvePilotUIState'].autoFollow
@@ -667,6 +667,7 @@ class Controls:
     if self.active:
       self.current_alert_types.append(ET.WARNING)
     elif self.jvePilotState.carControl.aolcReady:
+      self.current_alert_types.append(ET.NO_ENTRY)
       self.current_alert_types.append(ET.WARNING)
 
   def state_control(self, CS):
@@ -694,13 +695,16 @@ class Controls:
     CC.jvePilotState.carState = CS.jvePilotCarState
     CC.jvePilotState.carControl = self.jvePilotState.carControl
 
-    no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
-    ignored_entries = list(filter(lambda e: e not in [EventName.buttonCancel, EventName.pedalPressed], no_entries))
-    valid_aolc_state = len(ignored_entries) == 0
-    CC.jvePilotState.carControl.aolcReady = valid_aolc_state and CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
-
     # Check which actuators can be enabled
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
+
+    CC.jvePilotState.carControl.aolcReady = CS.cruiseState.available and not standstill and self.params.get_bool("jvePilot.settings.steer.aolc")
+    if CC.jvePilotState.carControl.aolcReady:
+      no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
+      if len(no_entries) != 0:
+        valid_aolc_state = len(list(filter(lambda e: e not in [EventName.buttonCancel, EventName.pedalPressed], no_entries))) == 0
+        CC.jvePilotState.carControl.aolcReady = valid_aolc_state
+
     CC.latActive = (self.active or CC.jvePilotState.carControl.aolcReady) and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
                    (not standstill or self.joystick_mode)
     CC.longActive = self.enabled and not self.events.contains(ET.OVERRIDE_LONGITUDINAL) and self.CP.openpilotLongitudinalControl
