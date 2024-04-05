@@ -43,8 +43,7 @@ class CarController:
     self.button_frame = 0
     self.last_target = 0
     self.last_lkas_active = False
-    self.delay_lkas_active_until = None
-    self.delay_lkas_speed_change = None
+    self.delay_lkas_active_until = 0
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
@@ -54,16 +53,9 @@ class CarController:
     # delay lkas when it becomes active
     if lkas_active and lkas_active != self.last_lkas_active:
       self.delay_lkas_active_until = self.frame + self.cachedParams.get_float('jvePilot.settings.steer.aolcDelay', 1000)
-      self.delay_lkas_speed_change = CS.out.vEgoRaw 
     self.last_lkas_active = lkas_active
-    if lkas_active and self.delay_lkas_speed_change is not None:
-      delaying = self.frame < self.delay_lkas_active_until or abs(CS.out.vEgoRaw - self.delay_lkas_speed_change) < self.cachedParams.get_float('jvePilot.settings.steer.aolcSpeedDelay', 1000)
-      if delaying:
-        lkas_active = False
-      else:
-        self.delay_lkas_speed_change = None
 
-    lkas_active = lkas_active and self.lkas_control_bit_prev
+    lkas_active = lkas_active and self.lkas_control_bit_prev and self.frame > self.delay_lkas_active_until
     
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
@@ -124,13 +116,14 @@ class CarController:
 
       # steer torque
       if CS.out.vEgo < 2.:  # limit steer
-        # TODO: Save and restore these instead of hard coding the values
-        self.params.STEER_DELTA_UP = 1
-        self.params.STEER_DELTA_DOWN = 1
+        temp_up = self.params.STEER_DELTA_UP
+        temp_down = self.params.STEER_DELTA_DOWN
+
+        self.params.STEER_DELTA_UP = self.params.STEER_DELTA_DOWN = 1
         apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps,
                                                      self.params)
-        self.params.STEER_DELTA_UP = 3
-        self.params.STEER_DELTA_DOWN = 3
+        self.params.STEER_DELTA_UP = temp_up
+        self.params.STEER_DELTA_DOWN = temp_down
       else:
         apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
 

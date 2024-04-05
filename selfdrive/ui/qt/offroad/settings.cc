@@ -140,12 +140,6 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
       "AOLC Control Delay",
       "Default: 100, Min: 0, Max: 500\n"
         "Delay between when AOLC is available and when lateral commands will be sent"
-    },
-    { "jvePilot.settings.steer.aolcSpeedDelay",
-      0, 2,
-      "AOLC Control Speed Delay",
-      "Default: 1.0 m/s, Min: 0. m/s, Max: 2.0 m/s\n"
-        "Change in speed in meters per second between when AOLC is available and when lateral commands will be sent"
     }
   };
   addItem(new ParamControl("jvePilot.settings.steer.aolc",
