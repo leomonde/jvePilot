@@ -154,7 +154,7 @@ void ElidedLabel::paintEvent(QPaintEvent *event) {
 // ParamControl
 
 ParamControl::ParamControl(const QString &param, const QString &title, const QString &desc, const QString &icon, QWidget *parent, QList<struct ConfigButton> *btns)
-    : ToggleControl(title, desc, icon, false, parent) {
+    : ToggleControl(title, desc, icon, false, parent, btns) {
   key = param.toStdString();
   QObject::connect(this, &ParamControl::toggleFlipped, this, &ParamControl::toggleClicked);
 }
