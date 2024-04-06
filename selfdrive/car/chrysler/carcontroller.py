@@ -113,7 +113,7 @@ class CarController:
         self.next_lkas_control_change = self.frame + 200
 
       # steer torque
-      if CS.out.vEgo < 2.:  # limit steer
+      if CS.out.vEgo < 9.:  # limit steer
         temp_up = self.params.STEER_DELTA_UP
         temp_down = self.params.STEER_DELTA_DOWN
 
