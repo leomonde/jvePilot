@@ -4,6 +4,7 @@ from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_meas_steer_torque_limits
 from openpilot.selfdrive.car.chrysler import chryslercan
 from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags
+from openpilot.selfdrive.car.interfaces import FORWARD_GEARS
 
 from selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
 from common.conversions import Conversions as CV
@@ -84,10 +85,9 @@ class CarController:
     # HUD alerts
     if self.frame % 25 == 0:
       if CS.lkas_car_model != -1:
-        aolc_available = CS.out.cruiseState.available and self.settingsParams.get_bool("jvePilot.settings.steer.aolc")
         can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, lkas_active, CC.hudControl.visualAlert,
                                                      self.hud_count, CS.lkas_car_model, CS.auto_high_beam,
-                                                     aolc_available))
+                                                     CC.jvePilotState.carControl.aolcReady))
         self.hud_count += 1
 
     # steering
@@ -96,7 +96,7 @@ class CarController:
       # TODO: can we make this more sane? why is it different for all the cars?
       lkas_control_bit = self.lkas_control_bit_prev
       if self.steerNoMinimum:
-        lkas_control_bit = CC.latActive
+        lkas_control_bit = CS.out.gearShifter in FORWARD_GEARS
       elif CS.out.vEgo > self.CP.minSteerSpeed:
         lkas_control_bit = True
       elif  self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED:
@@ -107,10 +107,11 @@ class CarController:
           lkas_control_bit = False
 
       # EPS faults if LKAS re-enables too quickly
-      lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change) and not CS.out.steerFaultTemporary and not CS.out.steerFaultPermanent
+      lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
 
       if not lkas_control_bit and self.lkas_control_bit_prev:
         self.next_lkas_control_change = self.frame + 200
+      self.lkas_control_bit_prev = lkas_control_bit
 
       # steer torque
       if CS.out.vEgo < 2.:  # limit steer
@@ -125,11 +126,10 @@ class CarController:
       else:
         apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
 
-      if not lkas_active or not lkas_control_bit or not self.lkas_control_bit_prev:
+      if not lkas_active or not lkas_control_bit:
         apply_steer = 0
 
       self.apply_steer_last = apply_steer
-      self.lkas_control_bit_prev = lkas_control_bit
 
       can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
 
