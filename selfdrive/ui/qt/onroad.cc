@@ -461,18 +461,23 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
   drawText(p, rect().center().x(), 290, speedUnit, 200);
 
   if (accEco >= 0) { // got data yet?
-    // Auto Follow
+    // Calculate offsets for the icon's position
+    int xOffset = -35; // offset for x-coordinate
+    int yOffset = 200; // offset for y-coordinate
     drawIcon(p,
-             QPoint(rect().right() - radius / 2 - bdr_s * 2,
-             rect().bottom() - footer_h / 2 - button_bigger - radius),
+             QPoint(rect().right() - radius / 2 - bdr_s * 2 - xOffset,
+             rect().bottom() - footer_h / 2 - button_bigger - radius - yOffset),
              auto_follow_imgs[autoFollowEnabled], QColor(0, 0, 0, 0), 1.0);
 
     // eco icon
-    drawIcon(p, QPoint(rect().right() - radius / 2 - bdr_s * 2 - button_bigger, rect().bottom() - footer_h / 2 - button_bigger),
-             eco_imgs[accEco], QColor(0, 0, 0, 0), 1.0);
+    int xOffset2 = -120; // offset for x-coordinate
+    int yOffset2 = 150; // offset for y-coordinate
+    int iconSize = 175; // icon size (adjust as needed)
+    drawIcon(p, QPoint(rect().right() - radius / 2 - bdr_s * 2 - button_bigger - xOffset2, rect().bottom() - footer_h / 2 - button_bigger - yOffset2),
+             eco_imgs[accEco].scaled(iconSize, iconSize), QColor(0, 0, 0, 0), 1.0);
     uiState()->scene.accEco_btn = QRect(
-      rect().right() - radius / 2 - bdr_s * 2 - button_bigger,
-      rect().bottom() - footer_h / 2 - button_bigger,
+      rect().right() - radius / 2 - bdr_s * 2 - button_bigger - xOffset2,
+      rect().bottom() - footer_h / 2 - button_bigger - yOffset2,
       img_size + button_bigger,
       img_size + button_bigger);
   }
