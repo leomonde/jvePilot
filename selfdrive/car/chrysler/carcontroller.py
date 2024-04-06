@@ -43,21 +43,11 @@ class CarController:
     self.autoFollowDistanceLock = None
     self.button_frame = 0
     self.last_target = 0
-    self.last_lkas_active = False
-    self.delay_lkas_active_until = 0
+    self.last_aolc_ready = False
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
 
-    lkas_active = CC.latActive
-
-    # delay lkas when it becomes active
-    if lkas_active and lkas_active != self.last_lkas_active:
-      self.delay_lkas_active_until = self.frame + 100
-    self.last_lkas_active = lkas_active
-
-    lkas_active = lkas_active and self.frame > self.delay_lkas_active_until
-    
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
 
@@ -85,9 +75,9 @@ class CarController:
     # HUD alerts
     if self.frame % 25 == 0:
       if CS.lkas_car_model != -1:
-        can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, lkas_active, CC.hudControl.visualAlert,
+        can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, CC.latActive and self.lkas_control_bit_prev, CC.hudControl.visualAlert,
                                                      self.hud_count, CS.lkas_car_model, CS.auto_high_beam,
-                                                     CC.jvePilotState.carControl.aolcReady))
+                                                     CC.latActive or CC.jvePilotState.carControl.aolcReady))
         self.hud_count += 1
 
     # steering
@@ -112,6 +102,10 @@ class CarController:
       elif self.CP.carFingerprint in RAM_CARS:
         if CS.out.vEgo < (self.CP.minSteerSpeed - 0.5):
           lkas_control_bit = False
+
+      if CS.out.jvePilotState.carControl.aolcReady and CS.out.jvePilotState.carControl.aolcReady != self.last_aolc_ready:
+        self.next_lkas_control_change = self.frame + 100
+      self.last_aolc_ready = CS.out.jvePilotState.carControl.aolcReady
 
       # EPS faults if LKAS re-enables too quickly
       lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)

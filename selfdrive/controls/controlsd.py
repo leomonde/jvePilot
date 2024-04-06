@@ -668,7 +668,7 @@ class Controls:
       self.current_alert_types.append(ET.WARNING)
     elif self.jvePilotState.carControl.aolcReady:
       self.current_alert_types.append(ET.WARNING)
-      if self.has_invalid_aolc_states():
+      if self.has_invalid_aolc_states() and not CS.standstill:
         self.current_alert_types.append(ET.NO_ENTRY)
 
   def has_invalid_aolc_states(self):
