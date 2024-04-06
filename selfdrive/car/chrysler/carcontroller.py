@@ -52,7 +52,7 @@ class CarController:
 
     # delay lkas when it becomes active
     if lkas_active and lkas_active != self.last_lkas_active:
-      self.delay_lkas_active_until = self.frame + self.cachedParams.get_float('jvePilot.settings.steer.aolcDelay', 1000)
+      self.delay_lkas_active_until = self.frame + 100
     self.last_lkas_active = lkas_active
 
     lkas_active = lkas_active and self.lkas_control_bit_prev and self.frame > self.delay_lkas_active_until
@@ -108,11 +108,10 @@ class CarController:
           lkas_control_bit = False
 
       # EPS faults if LKAS re-enables too quickly
-      lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
+      lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change) and not CS.out.steerFaultTemporary and not CS.out.steerFaultPermanent
 
       if not lkas_control_bit and self.lkas_control_bit_prev:
         self.next_lkas_control_change = self.frame + 200
-      self.lkas_control_bit_prev = lkas_control_bit
 
       # steer torque
       if CS.out.vEgo < 2.:  # limit steer
@@ -127,9 +126,11 @@ class CarController:
       else:
         apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
 
-      if not lkas_active or not lkas_control_bit:
+      if not lkas_active or not lkas_control_bit or not self.lkas_control_bit_prev:
         apply_steer = 0
+
       self.apply_steer_last = apply_steer
+      self.lkas_control_bit_prev = lkas_control_bit
 
       can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
 
