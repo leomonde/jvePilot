@@ -55,7 +55,7 @@ class CarController:
       self.delay_lkas_active_until = self.frame + 100
     self.last_lkas_active = lkas_active
 
-    lkas_active = lkas_active and self.lkas_control_bit_prev and self.frame > self.delay_lkas_active_until
+    lkas_active = lkas_active and self.frame > self.delay_lkas_active_until
     
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
