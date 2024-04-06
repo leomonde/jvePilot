@@ -134,11 +134,20 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                                   &miscConfigs));
 
   // Always One Lateral Control
+  QList<struct ConfigButton> aolcConfigs = {
+    { "jvePilot.settings.steer.aolcEngageSpeed",
+      0, 23,
+      "AOLC Engage Speed",
+      "Default: 6.7m/s, Min: 0m/s, Max: 23m/s\n"
+        "The minimum speed, in meters per second, needed to auto enable AOLC without first engaging ACC."
+    }
+  };
   addItem(new ParamControl("jvePilot.settings.steer.aolc",
                            "BETA: Always On Lateral Control",
                            "When enabled and ACC is enabled, jvePilot will steer even if ACC/jvePilot isn't active",
                            "../assets/img_chffr_wheel.png",
-                           this));
+                           this,
+                           &aolcConfigs));
 
   // Minimum Steer Check
   addItem(new ParamControl("jvePilot.settings.steer.noMinimum",

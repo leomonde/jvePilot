@@ -96,10 +96,17 @@ class CarController:
       # TODO: can we make this more sane? why is it different for all the cars?
       lkas_control_bit = self.lkas_control_bit_prev
       if self.steerNoMinimum:
-        lkas_control_bit = CC.latActive
+        control_active = CC.latActive
+        if control_active and \
+            not self.lkas_control_bit_prev and \
+            not CC.enabled and \
+            CC.jvePilotState.carControl.aolcReady and \
+            CS.out.vEgo < self.cachedParams.get_float('jvePilot.settings.steer.aolcEngageSpeed', 1000):
+          control_active = False
+        lkas_control_bit = control_active
       elif CS.out.vEgo > self.CP.minSteerSpeed:
         lkas_control_bit = True
-      elif  self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED:
+      elif self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED:
         if CS.out.vEgo < (self.CP.minSteerSpeed - 3.0):
           lkas_control_bit = False
       elif self.CP.carFingerprint in RAM_CARS:
