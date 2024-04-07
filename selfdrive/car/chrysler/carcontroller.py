@@ -82,18 +82,11 @@ class CarController:
 
     # steering
     new_steer = int(round(CC.actuators.steer * self.params.STEER_MAX))
-    if self.frame % self.params.STEER_STEP == 0:  # or abs(new_steer - int(self.apply_steer_last) > 30):
+    if self.frame % self.params.STEER_STEP == 0 or abs(new_steer - int(self.apply_steer_last) > 30):
       # TODO: can we make this more sane? why is it different for all the cars?
       lkas_control_bit = self.lkas_control_bit_prev
       if self.steerNoMinimum:
-        control_active = CC.latActive
-        if control_active and \
-            not self.lkas_control_bit_prev and \
-            not CC.enabled and \
-            CC.jvePilotState.carControl.aolcReady and \
-            CS.out.vEgo < self.cachedParams.get_float('jvePilot.settings.steer.aolcEngageSpeed', 1000):
-          control_active = False
-        lkas_control_bit = control_active
+        lkas_control_bit = CC.latActive
       elif CS.out.vEgo > self.CP.minSteerSpeed:
         lkas_control_bit = True
       elif self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED:

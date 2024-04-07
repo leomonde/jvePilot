@@ -61,6 +61,7 @@ ACTUATOR_FIELDS = tuple(car.CarControl.Actuators.schema.fields.keys())
 ACTIVE_STATES = (State.enabled, State.softDisabling, State.overriding)
 ENABLED_STATES = (State.preEnabled, *ACTIVE_STATES)
 
+AOLC_IGNORED_EVENTS = [EventName.buttonCancel, EventName.pedalPressed, EventName.resumeBlocked]
 
 class CarD:
   CI: CarInterfaceBase
@@ -669,11 +670,14 @@ class Controls:
     elif self.jvePilotState.carControl.aolcReady:
       self.current_alert_types.append(ET.WARNING)
       if self.has_invalid_aolc_states() and not CS.standstill:
+        for e in AOLC_IGNORED_EVENTS:
+          if e in self.events.names:
+            self.events.names.remove(e)
         self.current_alert_types.append(ET.NO_ENTRY)
 
   def has_invalid_aolc_states(self):
     no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
-    return any(e not in [EventName.buttonCancel, EventName.pedalPressed, EventName.resumeBlocked] for e in no_entries)
+    return any(e not in AOLC_IGNORED_EVENTS for e in no_entries)
 
   def state_control(self, CS):
     """Given the state, this function returns a CarControl packet"""
