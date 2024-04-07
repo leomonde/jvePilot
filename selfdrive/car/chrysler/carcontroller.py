@@ -77,7 +77,7 @@ class CarController:
       if CS.lkas_car_model != -1:
         can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, CC.latActive and self.lkas_control_bit_prev, CC.hudControl.visualAlert,
                                                      self.hud_count, CS.lkas_car_model, CS.auto_high_beam,
-                                                     CC.latActive or CC.jvePilotState.carControl.aolcReady))
+                                                     CS.out.cruiseState.available))
         self.hud_count += 1
 
     # steering
@@ -96,9 +96,9 @@ class CarController:
         if CS.out.vEgo < (self.CP.minSteerSpeed - 0.5):
           lkas_control_bit = False
 
-      if not self.lkas_control_bit_prev and CC.jvePilotState.carControl.aolcReady and CC.jvePilotState.carControl.aolcReady != self.last_aolc_ready:
+      if not self.lkas_control_bit_prev and CC.jvePilotState.carControl.aolcAvailable and CC.jvePilotState.carControl.aolcAvailable != self.last_aolc_ready:
         self.next_lkas_control_change = self.frame + 100
-      self.last_aolc_ready = CC.jvePilotState.carControl.aolcReady
+      self.last_aolc_ready = CC.jvePilotState.carControl.aolcAvailable
 
       # EPS faults if LKAS re-enables too quickly
       lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
@@ -163,12 +163,16 @@ class CarController:
         CC.jvePilotState.notifyUi = True
 
       if enabled and not CS.out.brakePressed:
+        follow_button = self.auto_follow_button(CC, CS)
+        acc_buttons, speed_diff = self.hybrid_acc_button(CC, CS)
         button_counter_offset = [1, 1, 0, None][self.button_frame % 4]
+        if not resume and follow_button is None and speed_diff > 3:
+          button_counter_offset = [1, 0, None][self.button_frame % 3]  # a little faster now
         if button_counter_offset is not None:
           if resume:
             buttons_to_press = ["ACC_Resume"]
           elif CS.out.cruiseState.enabled:  # Control ACC
-            buttons_to_press = [self.auto_follow_button(CC, CS), self.hybrid_acc_button(CC, CS)]
+            buttons_to_press = [follow_button, ]
 
     buttons_to_press = list(filter(None, buttons_to_press))
     if buttons_to_press is not None and len(buttons_to_press) > 0:
@@ -204,9 +208,11 @@ class CarController:
     minSetting = round(self.minAccSetting * self.round_to_unit)
 
     if target < current and current > minSetting:
-      return 'ACC_Decel'
+      return 'ACC_Decel', current - minSetting
     elif target > current:
-      return 'ACC_Accel'
+      return 'ACC_Accel', target - current
+
+    return None, 0.
 
   def auto_follow_button(self, CC, CS):
     if CC.jvePilotState.carControl.autoFollow:

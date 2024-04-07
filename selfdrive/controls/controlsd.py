@@ -667,17 +667,21 @@ class Controls:
     self.active = self.state in ACTIVE_STATES
     if self.active:
       self.current_alert_types.append(ET.WARNING)
-    elif self.jvePilotState.carControl.aolcReady:
+    elif self.jvePilotState.carControl.aolcAvailable:
       self.current_alert_types.append(ET.WARNING)
-      if self.has_invalid_aolc_states() and not CS.standstill:
+      if self.has_events_blocking_aolc() and not CS.standstill:
         for e in AOLC_IGNORED_EVENTS:
           if e in self.events.names:
             self.events.names.remove(e)
         self.current_alert_types.append(ET.NO_ENTRY)
 
-  def has_invalid_aolc_states(self):
+  def has_events_blocking_aolc(self):
     no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
     return any(e not in AOLC_IGNORED_EVENTS for e in no_entries)
+
+  def has_blocking_events(self, states):
+    no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
+    return any(e in states for e in no_entries)
 
   def state_control(self, CS):
     """Given the state, this function returns a CarControl packet"""
@@ -707,8 +711,11 @@ class Controls:
     # Check which actuators can be enabled
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
 
-    CC.jvePilotState.carControl.aolcReady = CS.cruiseState.available and self.params.get_bool("jvePilot.settings.steer.aolc")
-    aolcActive = CC.jvePilotState.carControl.aolcReady and not self.has_invalid_aolc_states()
+    CC.jvePilotState.carControl.aolcAvailable = CS.cruiseState.available and \
+                                            self.params.get_bool("jvePilot.settings.steer.aolc") and \
+                                            not self.has_blocking_events([EventName.reverseGear])
+
+    aolcActive = CC.jvePilotState.carControl.aolcAvailable and not self.has_events_blocking_aolc()
 
     CC.latActive = (self.active or aolcActive) and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
                    (not standstill or self.joystick_mode)
