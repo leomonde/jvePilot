@@ -23,7 +23,7 @@ from openpilot.selfdrive.car.car_helpers import get_car, get_startup_event, get_
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from openpilot.selfdrive.controls.lib.alertmanager import AlertManager, set_offroad_alert
 from openpilot.selfdrive.controls.lib.drive_helpers import VCruiseHelper, clip_curvature
-from openpilot.selfdrive.controls.lib.events import Events, ET
+from openpilot.selfdrive.controls.lib.events import Events, ET, EVENTS
 from openpilot.selfdrive.controls.lib.latcontrol import LatControl, MIN_LATERAL_CONTROL_SPEED
 from openpilot.selfdrive.controls.lib.latcontrol_pid import LatControlPID
 from openpilot.selfdrive.controls.lib.latcontrol_angle import LatControlAngle, STEER_ANGLE_SATURATION_THRESHOLD
@@ -61,6 +61,7 @@ ACTUATOR_FIELDS = tuple(car.CarControl.Actuators.schema.fields.keys())
 ACTIVE_STATES = (State.enabled, State.softDisabling, State.overriding)
 ENABLED_STATES = (State.preEnabled, *ACTIVE_STATES)
 
+AOLC_IGNORED_EVENTS = [EventName.buttonCancel, EventName.pedalPressed, EventName.resumeBlocked]
 
 class CarD:
   CI: CarInterfaceBase
@@ -561,7 +562,7 @@ class Controls:
            if ps.safetyModel not in IGNORED_SAFETY_MODES):
       self.mismatch_counter += 1
 
-    if self.jvePilotState.notifyUi:
+    if self.jvePilotState.notifyUi or self.sm.frame == 25:
       self.ui_notify()
     elif self.sm.updated['jvePilotUIState']:
       self.jvePilotState.carControl.autoFollow = self.sm['jvePilotUIState'].autoFollow
@@ -666,6 +667,21 @@ class Controls:
     self.active = self.state in ACTIVE_STATES
     if self.active:
       self.current_alert_types.append(ET.WARNING)
+    elif self.jvePilotState.carControl.aolcAvailable:
+      self.current_alert_types.append(ET.WARNING)
+      if self.has_events_blocking_aolc() and not CS.standstill:
+        for e in AOLC_IGNORED_EVENTS:
+          if e in self.events.names:
+            self.events.names.remove(e)
+        self.current_alert_types.append(ET.NO_ENTRY)
+
+  def has_events_blocking_aolc(self):
+    no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
+    return any(e not in AOLC_IGNORED_EVENTS for e in no_entries)
+
+  def has_blocking_events(self, states):
+    no_entries = list(filter(lambda e: ET.NO_ENTRY in EVENTS.get(e, {}), self.events.names))
+    return any(e in states for e in no_entries)
 
   def state_control(self, CS):
     """Given the state, this function returns a CarControl packet"""
@@ -689,14 +705,21 @@ class Controls:
     CC = car.CarControl.new_message()
     CC.enabled = self.enabled
 
-    # Check which actuators can be enabled
-    standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
-    CC.latActive = self.active and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
-                   (not standstill or self.joystick_mode)
-    CC.longActive = self.enabled and not self.events.contains(ET.OVERRIDE_LONGITUDINAL) and self.CP.openpilotLongitudinalControl
-
     CC.jvePilotState.carState = CS.jvePilotCarState
     CC.jvePilotState.carControl = self.jvePilotState.carControl
+
+    # Check which actuators can be enabled
+    standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
+
+    CC.jvePilotState.carControl.aolcAvailable = CS.cruiseState.available and \
+                                            self.params.get_bool("jvePilot.settings.steer.aolc") and \
+                                            not self.has_blocking_events([EventName.reverseGear])
+
+    aolcActive = CC.jvePilotState.carControl.aolcAvailable and not self.has_events_blocking_aolc()
+
+    CC.latActive = (self.active or aolcActive) and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
+                   (not standstill or self.joystick_mode)
+    CC.longActive = self.enabled and not self.events.contains(ET.OVERRIDE_LONGITUDINAL) and self.CP.openpilotLongitudinalControl
 
     actuators = CC.actuators
     actuators.longControlState = self.LoC.long_control_state

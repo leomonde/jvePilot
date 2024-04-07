@@ -31,6 +31,8 @@ TORQUE_PARAMS_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/params.tom
 TORQUE_OVERRIDE_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/override.toml')
 TORQUE_SUBSTITUTE_PATH = os.path.join(BASEDIR, 'selfdrive/car/torque_data/substitute.toml')
 
+FORWARD_GEARS = [GearShifter.drive, GearShifter.low, GearShifter.eco,
+                 GearShifter.sport, GearShifter.manumatic, GearShifter.brake]
 
 class LatControlInputs(NamedTuple):
   lateral_acceleration: float
