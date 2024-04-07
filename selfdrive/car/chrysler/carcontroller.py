@@ -172,7 +172,7 @@ class CarController:
           if resume:
             buttons_to_press = ["ACC_Resume"]
           elif CS.out.cruiseState.enabled:  # Control ACC
-            buttons_to_press = [follow_button, ]
+            buttons_to_press = [follow_button, acc_buttons]
 
     buttons_to_press = list(filter(None, buttons_to_press))
     if buttons_to_press is not None and len(buttons_to_press) > 0:
