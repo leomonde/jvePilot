@@ -9,6 +9,7 @@ Visit http://bit.ly/jvereadme for more information
   * Corrected lane departure and hands on wheel messaging
   * LKAS icon yellow when steer becomes unavailable
 * Tweaked ACC breaking to limit speed change when heavy breaking is required
+* Align icons on right side of screen.  Thanks to @mikejakes!
 * Update to 0.9.6 (2024-02-27)
   * New driving model
     * Vision model trained on more data
