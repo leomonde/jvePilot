@@ -18,7 +18,8 @@ ButtonType = car.CarState.ButtonEvent.Type
 V_CRUISE_MIN_IMPERIAL_MS = V_CRUISE_MIN_IMPERIAL * CV.KPH_TO_MS
 V_CRUISE_MIN_MS = V_CRUISE_MIN * CV.KPH_TO_MS
 AUTO_FOLLOW_LOCK_MS = 3 * CV.MPH_TO_MS
-ACC_BRAKE_THRESHOLD = 2 * CV.MPH_TO_MS
+ACC_BRAKE_THRESHOLD = 4 * CV.MPH_TO_MS
+ACC_BRAKE_MAX = 10
 
 class CarController:
   def __init__(self, dbc_name, CP, VM):
@@ -77,7 +78,7 @@ class CarController:
       if CS.lkas_car_model != -1:
         can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, CC.latActive and self.lkas_control_bit_prev, CC.hudControl.visualAlert,
                                                      self.hud_count, CS.lkas_car_model, CS.auto_high_beam,
-                                                     CS.out.cruiseState.available))
+                                                     CC.enabled or CC.jvePilotState.carControl.aolcAvailable, CS.out.cruiseState.available))
         self.hud_count += 1
 
     # steering
@@ -166,8 +167,8 @@ class CarController:
         follow_button = self.auto_follow_button(CC, CS)
         acc_buttons, speed_diff = self.hybrid_acc_button(CC, CS)
         button_counter_offset = [1, 1, 0, None][self.button_frame % 4]
-        if not resume and follow_button is None and speed_diff > 3:
-          button_counter_offset = [1, 0, None][self.button_frame % 3]  # a little faster now
+        if not resume and follow_button is None and speed_diff > 4 and self.button_frame % 24 < 12:
+          button_counter_offset = [1, 0][self.button_frame % 2]  # a little faster now
         if button_counter_offset is not None:
           if resume:
             buttons_to_press = ["ACC_Resume"]
@@ -201,7 +202,7 @@ class CarController:
     # ACC Braking
     diff = CS.out.vEgo - target
     if diff > ACC_BRAKE_THRESHOLD and abs(target - CC.jvePilotState.carControl.vMaxCruise) > ACC_BRAKE_THRESHOLD:  # ignore change in max cruise speed
-      target -= diff
+      target -= min(diff, ACC_BRAKE_MAX)
 
     target = math.ceil(min(CC.jvePilotState.carControl.vMaxCruise, target) * self.round_to_unit)
     current = round(CS.out.cruiseState.speed * self.round_to_unit)

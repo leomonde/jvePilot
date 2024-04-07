@@ -4,7 +4,7 @@ from openpilot.selfdrive.car.chrysler.values import RAM_CARS
 GearShifter = car.CarState.GearShifter
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
-def create_lkas_hud(packer, CP, lat_active, hud_alert, hud_count, car_model, auto_high_beam, lat_available):
+def create_lkas_hud(packer, CP, lat_active, hud_alert, hud_count, car_model, auto_high_beam, lat_available, cruise_available):
   # LKAS_HUD - Controls what lane-keeping icon is displayed
 
   # == Color ==
@@ -37,7 +37,7 @@ def create_lkas_hud(packer, CP, lat_active, hud_alert, hud_count, car_model, aut
     lines = 0
     alerts = 6
   else:
-    color = 2 if lat_active else 3 if lat_available else 0
+    color = 2 if lat_active else 3 if lat_available else 1 if cruise_available else 0
     lines = 3 if lat_active else 0
     alerts = 1 if hud_count < (1 * 4) else 0
 
