@@ -205,9 +205,9 @@ class CarController:
     minSetting = round(self.minAccSetting * self.round_to_unit)
 
     if target < current and current > minSetting:
-      return 'ACC_Decel', current - minSetting
+      return 'ACC_Decel'
     elif target > current:
-      return 'ACC_Accel', target - current
+      return 'ACC_Accel'
 
   def auto_follow_button(self, CC, CS):
     if CC.jvePilotState.carControl.autoFollow:
