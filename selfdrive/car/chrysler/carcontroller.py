@@ -103,7 +103,7 @@ class CarController:
         if CS.out.vEgo < (self.CP.minSteerSpeed - 0.5):
           lkas_control_bit = False
 
-      if CC.jvePilotState.carControl.aolcReady and CC.jvePilotState.carControl.aolcReady != self.last_aolc_ready:
+      if self.lkas_control_bit_prev and CC.jvePilotState.carControl.aolcReady and CC.jvePilotState.carControl.aolcReady != self.last_aolc_ready:
         self.next_lkas_control_change = self.frame + 100
       self.last_aolc_ready = CC.jvePilotState.carControl.aolcReady
 
