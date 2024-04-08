@@ -213,7 +213,7 @@ static void chrysler_rx_hook(const CANPacket_t *to_push) {
     brake_pressed = ((GET_BYTE(to_push, 0U) & 0xFU) >> 2U) == 1U;
   }
 
-  //generic_rx_checks((bus == 0) && (addr == chrysler_addrs->LKAS_COMMAND));
+  generic_rx_checks((bus == 0) && (addr == chrysler_addrs->LKAS_COMMAND));
 }
 
 static bool chrysler_tx_hook(const CANPacket_t *to_send) {
