@@ -98,7 +98,7 @@ class CarController:
           lkas_control_bit = False
 
       if not self.lkas_control_bit_prev and CC.jvePilotState.carControl.aolcAvailable and CC.jvePilotState.carControl.aolcAvailable != self.last_aolc_ready:
-        self.next_lkas_control_change = self.frame + 100
+        self.next_lkas_control_change = self.frame + 70
       self.last_aolc_ready = CC.jvePilotState.carControl.aolcAvailable
 
       # EPS faults if LKAS re-enables too quickly
