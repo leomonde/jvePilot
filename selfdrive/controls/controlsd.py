@@ -187,6 +187,8 @@ class Controls:
     self.CP.alternativeExperience = 0
     if not self.disengage_on_accelerator:
       self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.DISABLE_DISENGAGE_ON_GAS
+    if self.params.get_bool("jvePilot.settings.steer.aolc"):
+      self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.AOLC_ENABLED
 
     # read params
     self.is_metric = self.params.get_bool("IsMetric")
