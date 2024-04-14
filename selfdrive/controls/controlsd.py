@@ -184,9 +184,12 @@ class Controls:
 
     # set alternative experiences from parameters
     self.disengage_on_accelerator = self.params.get_bool("DisengageOnAccelerator")
+    self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
     self.CP.alternativeExperience = 0
     if not self.disengage_on_accelerator:
       self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.DISABLE_DISENGAGE_ON_GAS
+    if self.aolc_enabled:
+      self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.AOLC_ENABLED
 
     # read params
     self.is_metric = self.params.get_bool("IsMetric")
@@ -711,9 +714,7 @@ class Controls:
     # Check which actuators can be enabled
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
 
-    CC.jvePilotState.carControl.aolcAvailable = CS.cruiseState.available and \
-                                            self.params.get_bool("jvePilot.settings.steer.aolc") and \
-                                            not self.has_blocking_events([EventName.reverseGear])
+    CC.jvePilotState.carControl.aolcAvailable = self.aolc_enabled and CS.cruiseState.available and not self.has_blocking_events([EventName.reverseGear])
 
     aolcActive = CC.jvePilotState.carControl.aolcAvailable and not self.has_events_blocking_aolc()
 
