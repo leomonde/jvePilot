@@ -135,8 +135,8 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
 
   // Always One Lateral Control
   addItem(new ParamControl("jvePilot.settings.steer.aolc",
-                           "BETA: Always On Lateral Control",
-                           "When enabled and ACC is enabled, jvePilot will steer even if ACC/jvePilot isn't active",
+                           "Always On Lateral Control",
+                           "When enabled and ACC is enabled, jvePilot will steer even if ACC isn't active",
                            "../assets/img_chffr_wheel.png",
                            this));
 

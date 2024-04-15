@@ -1,7 +1,7 @@
 Version jvePilot-0.9.6(v3.15)
 ========================
 Visit http://bit.ly/jvereadme for more information
-* New Beta Feature!: Always On Lateral Control
+* New Feature!: Always On Lateral Control
   * Many thanks to @mikejakes for helping get this working for everyone!
   * Lateral control without having to activate ACC.
 * New radar code thanks to @squizzeak!
