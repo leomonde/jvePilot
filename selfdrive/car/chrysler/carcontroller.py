@@ -85,12 +85,13 @@ class CarController:
     new_steer = int(round(CC.actuators.steer * self.params.STEER_MAX))
     if self.frame % self.params.STEER_STEP == 0 or abs(new_steer - int(self.apply_steer_last) > 30):
       # TODO: can we make this more sane? why is it different for all the cars?
+      high_steer = self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED
       lkas_control_bit = self.lkas_control_bit_prev
       if self.steerNoMinimum:
-        lkas_control_bit = CC.latActive
+        lkas_control_bit = CC.latActive or not high_steer  # never turn off low steer
       elif CS.out.vEgo > self.CP.minSteerSpeed:
         lkas_control_bit = True
-      elif self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED:
+      elif high_steer:
         if CS.out.vEgo < (self.CP.minSteerSpeed - 3.0):
           lkas_control_bit = False
       elif self.CP.carFingerprint in RAM_CARS:
