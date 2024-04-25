@@ -3,7 +3,8 @@ from common.numpy_fast import clip
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_meas_steer_torque_limits
 from openpilot.selfdrive.car.chrysler import chryslercan
-from openpilot.selfdrive.car.chrysler.values import RAM_CARS, PRE_2019, CarControllerParams, ChryslerFlags
+from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags
+from openpilot.selfdrive.car.interfaces import FORWARD_GEARS
 
 from selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
 from common.conversions import Conversions as CV
@@ -17,7 +18,8 @@ ButtonType = car.CarState.ButtonEvent.Type
 V_CRUISE_MIN_IMPERIAL_MS = V_CRUISE_MIN_IMPERIAL * CV.KPH_TO_MS
 V_CRUISE_MIN_MS = V_CRUISE_MIN * CV.KPH_TO_MS
 AUTO_FOLLOW_LOCK_MS = 3 * CV.MPH_TO_MS
-ACC_BRAKE_THRESHOLD = 2 * CV.MPH_TO_MS
+ACC_BRAKE_THRESHOLD = 4 * CV.MPH_TO_MS
+ACC_BRAKE_MAX = 10
 
 class CarController:
   def __init__(self, dbc_name, CP, VM):
@@ -42,11 +44,10 @@ class CarController:
     self.autoFollowDistanceLock = None
     self.button_frame = 0
     self.last_target = 0
+    self.last_aolc_ready = False
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
-
-    lkas_active = CC.latActive and self.lkas_control_bit_prev
 
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
@@ -75,8 +76,9 @@ class CarController:
     # HUD alerts
     if self.frame % 25 == 0:
       if CS.lkas_car_model != -1:
-        can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, lkas_active, CC.hudControl.visualAlert,
-                                                     self.hud_count, CS.lkas_car_model, CS.auto_high_beam))
+        can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, CC.latActive and self.lkas_control_bit_prev, CC.hudControl.visualAlert,
+                                                     self.hud_count, CS.lkas_car_model, CS.auto_high_beam,
+                                                     CC.enabled or CC.jvePilotState.carControl.aolcAvailable, CS.out.cruiseState.available))
         self.hud_count += 1
 
     # steering
@@ -86,7 +88,7 @@ class CarController:
       high_steer = self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED
       lkas_control_bit = self.lkas_control_bit_prev
       if self.steerNoMinimum:
-        lkas_control_bit = CC.enabled or not high_steer
+        lkas_control_bit = CC.latActive or not high_steer  # never turn off low steer
       elif CS.out.vEgo > self.CP.minSteerSpeed:
         lkas_control_bit = True
       elif high_steer:
@@ -96,6 +98,10 @@ class CarController:
         if CS.out.vEgo < (self.CP.minSteerSpeed - 0.5):
           lkas_control_bit = False
 
+      if not self.lkas_control_bit_prev and CC.jvePilotState.carControl.aolcAvailable and CC.jvePilotState.carControl.aolcAvailable != self.last_aolc_ready:
+        self.next_lkas_control_change = self.frame + 70
+      self.last_aolc_ready = CC.jvePilotState.carControl.aolcAvailable
+
       # EPS faults if LKAS re-enables too quickly
       lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
 
@@ -104,9 +110,21 @@ class CarController:
       self.lkas_control_bit_prev = lkas_control_bit
 
       # steer torque
-      apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
-      if not lkas_active or not lkas_control_bit:
+      if CS.out.vEgo < 2.:  # limit steer
+        temp_up = self.params.STEER_DELTA_UP
+        temp_down = self.params.STEER_DELTA_DOWN
+
+        self.params.STEER_DELTA_UP = self.params.STEER_DELTA_DOWN = 1
+        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps,
+                                                     self.params)
+        self.params.STEER_DELTA_UP = temp_up
+        self.params.STEER_DELTA_DOWN = temp_down
+      else:
+        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
+
+      if not CC.latActive or not lkas_control_bit:
         apply_steer = 0
+
       self.apply_steer_last = apply_steer
 
       can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
@@ -181,7 +199,7 @@ class CarController:
     # ACC Braking
     diff = CS.out.vEgo - target
     if diff > ACC_BRAKE_THRESHOLD and abs(target - CC.jvePilotState.carControl.vMaxCruise) > ACC_BRAKE_THRESHOLD:  # ignore change in max cruise speed
-      target -= diff
+      target -= min(diff, ACC_BRAKE_MAX)
 
     target = math.ceil(min(CC.jvePilotState.carControl.vMaxCruise, target) * self.round_to_unit)
     current = round(CS.out.cruiseState.speed * self.round_to_unit)

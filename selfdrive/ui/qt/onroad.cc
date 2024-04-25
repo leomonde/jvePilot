@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QMouseEvent>
 
+#include "common/swaglog.h"
 #include "common/timing.h"
 #include "selfdrive/ui/qt/util.h"
 #include "selfdrive/ui/qt/api.h"
@@ -309,7 +310,7 @@ void AnnotatedCameraWidget::updateState(const UIState &s) {
   const auto nav_instruction = sm["navInstruction"].getNavInstruction();
 
   // Handle older routes where vCruiseCluster is not set
-  float v_cruise =  cs.getVCruiseCluster() == 0.0 ? cs.getVCruise() : cs.getVCruiseCluster();
+  float v_cruise = cs.getVCruiseCluster() == 0.0 ? cs.getVCruise() : cs.getVCruiseCluster();
   setSpeed = cs_alive ? v_cruise : SET_SPEED_NA;
   is_cruise_set = setSpeed > 0 && (int)setSpeed != SET_SPEED_NA;
   if (is_cruise_set && !s.scene.is_metric) {
@@ -460,18 +461,23 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
   drawText(p, rect().center().x(), 290, speedUnit, 200);
 
   if (accEco >= 0) { // got data yet?
-    // Auto Follow
+    // Calculate offsets for the icon's position
+    int xOffset = -35; // offset for x-coordinate
+    int yOffset = 200; // offset for y-coordinate
     drawIcon(p,
-             QPoint(rect().right() - radius / 2 - bdr_s * 2,
-             rect().bottom() - footer_h / 2 - button_bigger - radius),
+             QPoint(rect().right() - radius / 2 - bdr_s * 2 - xOffset,
+             rect().bottom() - footer_h / 2 - button_bigger - radius - yOffset),
              auto_follow_imgs[autoFollowEnabled], QColor(0, 0, 0, 0), 1.0);
 
     // eco icon
-    drawIcon(p, QPoint(rect().right() - radius / 2 - bdr_s * 2 - button_bigger, rect().bottom() - footer_h / 2 - button_bigger),
-             eco_imgs[accEco], QColor(0, 0, 0, 0), 1.0);
+    int xOffset2 = -120; // offset for x-coordinate
+    int yOffset2 = 150; // offset for y-coordinate
+    int iconSize = 175; // icon size (adjust as needed)
+    drawIcon(p, QPoint(rect().right() - radius / 2 - bdr_s * 2 - button_bigger - xOffset2, rect().bottom() - footer_h / 2 - button_bigger - yOffset2),
+             eco_imgs[accEco].scaled(iconSize, iconSize), QColor(0, 0, 0, 0), 1.0);
     uiState()->scene.accEco_btn = QRect(
-      rect().right() - radius / 2 - bdr_s * 2 - button_bigger,
-      rect().bottom() - footer_h / 2 - button_bigger,
+      rect().right() - radius / 2 - bdr_s * 2 - button_bigger - xOffset2,
+      rect().bottom() - footer_h / 2 - button_bigger - yOffset2,
       img_size + button_bigger,
       img_size + button_bigger);
   }
@@ -659,7 +665,6 @@ void AnnotatedCameraWidget::paintGL() {
   SubMaster &sm = *(s->sm);
   const double start_draw_t = millis_since_boot();
   const cereal::ModelDataV2::Reader &model = sm["modelV2"].getModelV2();
-  const cereal::RadarState::Reader &radar_state = sm["radarState"].getRadarState();
 
   // draw camera frame
   {
@@ -708,17 +713,13 @@ void AnnotatedCameraWidget::paintGL() {
   painter.setRenderHint(QPainter::Antialiasing);
   painter.setPen(Qt::NoPen);
 
-  if (s->worldObjectsVisible()) {
-    if (sm.rcv_frame("modelV2") > s->scene.started_frame) {
-      update_model(s, model, sm["uiPlan"].getUiPlan());
-      if (sm.rcv_frame("radarState") > s->scene.started_frame) {
-        update_leads(s, radar_state, model.getPosition());
-      }
-    }
-
+  if (s->scene.world_objects_visible) {
+    update_model(s, model, sm["uiPlan"].getUiPlan());
     drawLaneLines(painter, s);
 
-    if (s->scene.longitudinal_control) {
+    if (s->scene.longitudinal_control && sm.rcv_frame("radarState") > s->scene.started_frame) {
+      auto radar_state = sm["radarState"].getRadarState();
+      update_leads(s, radar_state, model.getPosition());
       auto lead_one = radar_state.getLeadOne();
       auto lead_two = radar_state.getLeadTwo();
       if (lead_one.getStatus()) {

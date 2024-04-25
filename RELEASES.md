@@ -1,6 +1,36 @@
-Version jvePilot-0.9.5(v3.14.1)
+Version jvePilot-0.9.6(v3.15)
 ========================
 Visit http://bit.ly/jvereadme for more information
+* New Feature!: Always On Lateral Control
+  * Many thanks to @mikejakes for helping get this working for everyone!
+  * Lateral control without having to activate ACC.
+* New radar code thanks to @squizzeak!
+* Fixes to the dash icons and messaging
+  * Corrected lane departure and hands on wheel messaging
+  * LKAS icon yellow when steer becomes unavailable
+* Tweaked ACC breaking to limit speed change when heavy breaking is required
+* Align icons on right side of screen.  Thanks to @mikejakes!
+* Update to 0.9.6 (2024-02-27)
+  * New driving model
+    * Vision model trained on more data
+    * Improved driving performance
+    * Directly outputs curvature for lateral control
+  * New driver monitoring model
+    * Trained on larger dataset
+  * AGNOS 9
+  * comma body streaming and controls over WebRTC
+  * Improved fuzzy fingerprinting for many makes and models
+  * Alpha longitudinal support for new Toyota models
+  * Chevrolet Equinox 2019-22 support thanks to JasonJShuler and nworb-cire!
+  * Dodge Durango 2020-21 support
+  * Hyundai Staria 2023 support thanks to sunnyhaibin!
+  * Kia Niro Plug-in Hybrid 2022 support thanks to sunnyhaibin!
+  * Lexus LC 2024 support thanks to nelsonjchen!
+  * Toyota RAV4 2023-24 support
+  * Toyota RAV4 Hybrid 2023-24 support
+
+Version jvePilot-0.9.5(v3.14.1)
+========================
 * Some vehicles have the lead car indicator tracking in the opposite direction
   * New setting to allow reversing x-axis on radar
   * Update less steer torque less often for small changes
