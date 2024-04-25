@@ -174,7 +174,7 @@ class CarController:
             buttons_to_press = [self.auto_follow_button(CC, CS), self.hybrid_acc_button(CC, CS)]
 
     # ACC Auto enable
-    if self.auto_enable_acc and self.frame < 400:
+    if self.auto_enable_acc and self.frame < 50:
       if not CS.out.cruiseState.available:
         buttons_to_press.append("ACC_OnOff")
       else:
