@@ -176,7 +176,7 @@ class CarController:
     # ACC Auto enable
     if self.auto_enable_acc and self.frame < 400:
       if not CS.out.cruiseState.available:
-        buttons_to_press += "Cruise_OnOff"
+        buttons_to_press += "ACC_OnOff"
       else:
         self.auto_enable_acc = False
 
