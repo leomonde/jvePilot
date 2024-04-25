@@ -40,6 +40,7 @@ class CarController:
     self.minAccSetting = V_CRUISE_MIN_MS if self.settingsParams.get_bool("IsMetric") else V_CRUISE_MIN_IMPERIAL_MS
     self.round_to_unit = CV.MS_TO_KPH if self.settingsParams.get_bool("IsMetric") else CV.MS_TO_MPH
     self.steerNoMinimum = self.settingsParams.get_bool("jvePilot.settings.steer.noMinimum")
+    self.auto_enable_acc = self.settingsParams.get_bool("jvePilot.settings.autoEnableAcc")
 
     self.autoFollowDistanceLock = None
     self.button_frame = 0
@@ -171,6 +172,13 @@ class CarController:
             buttons_to_press = ["ACC_Resume"]
           elif CS.out.cruiseState.enabled:  # Control ACC
             buttons_to_press = [self.auto_follow_button(CC, CS), self.hybrid_acc_button(CC, CS)]
+
+    # ACC Auto enable
+    if self.auto_enable_acc and self.frame < 400:
+      if not CS.out.cruiseState.available:
+        buttons_to_press += "Cruise_OnOff"
+      else:
+        self.auto_enable_acc = False
 
     buttons_to_press = list(filter(None, buttons_to_press))
     if buttons_to_press is not None and len(buttons_to_press) > 0:

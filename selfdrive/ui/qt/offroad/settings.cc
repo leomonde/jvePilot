@@ -140,6 +140,13 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "../assets/img_chffr_wheel.png",
                            this));
 
+  // Auto enable ACC on start
+  addItem(new ParamControl("jvePilot.settings.autoEnableAcc",
+                           "Auto enable ACC on start",
+                           "Auto enable ACC on start",
+                           "",
+                           this));
+
   // Minimum Steer Check
   addItem(new ParamControl("jvePilot.settings.steer.noMinimum",
                            "ADVANCED: Speed Spoofing Mod",
