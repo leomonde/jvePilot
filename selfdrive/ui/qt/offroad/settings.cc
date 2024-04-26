@@ -77,6 +77,20 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                                   this,
                                   &autoFollowConfigs));
 
+  // Always One Lateral Control
+  addItem(new ParamControl("jvePilot.settings.steer.aolc",
+                           "Always On Lateral Control",
+                           "When enabled and ACC is ready, jvePilot will steer even if ACC isn't active",
+                           "../assets/img_chffr_wheel.png",
+                           this));
+
+  // Auto enable ACC on start
+  addItem(new ParamControl("jvePilot.settings.autoEnableAcc",
+                           "ACC ready on start",
+                           "When enabled, ACC will be made ready on start without having to press the ACC On/Off button",
+                           "../assets/img_circled_check.png",
+                           this));
+
   // reverseAccSpeedChange
   addItem(new ParamControl("jvePilot.settings.reverseAccSpeedChange",
                                   "Reverse ACC +/- Speeds",
@@ -132,20 +146,6 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                                   this,
                                   "../assets/jvepilot/settings/icon_misc.png",
                                   &miscConfigs));
-
-  // Always One Lateral Control
-  addItem(new ParamControl("jvePilot.settings.steer.aolc",
-                           "Always On Lateral Control",
-                           "When enabled and ACC is enabled, jvePilot will steer even if ACC isn't active",
-                           "../assets/img_chffr_wheel.png",
-                           this));
-
-  // Auto enable ACC on start
-  addItem(new ParamControl("jvePilot.settings.autoEnableAcc",
-                           "Auto enable ACC on start",
-                           "Auto enable ACC on start",
-                           "",
-                           this));
 
   // Minimum Steer Check
   addItem(new ParamControl("jvePilot.settings.steer.noMinimum",
