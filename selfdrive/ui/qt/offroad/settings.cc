@@ -138,6 +138,13 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
         "Compensate for mounting your device off-center in the windshield."
         "\nFor example, 0.04 if your device is 4cm left of center."
         "\nNOTE: This is not how far the CAMERA is off-center, but how far the MOUNT/DEVICE is off-center."
+    },
+    { "jvePilot.settings.steer.chillLevel",
+      0, 200,
+      "Torque Chill Level",
+      "Default: 20, Min: 0, Max: 200\n"
+        "Torque changes above this value are more aggressive about adjusting to it."
+        "\nA higher value can help prevent steering osculation."
     }
   };
   addItem(new LabelControl("jvePilot Control Settings",
@@ -175,23 +182,6 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "\nThis can help prevent steering osculation.  A lower value allows for faster adjustments.",
                            "../assets/jvepilot/settings/icon_wp_mod.png",
                            this));
-
-  QList<struct ConfigButton> chillLevelConfigs = {
-    { "jvePilot.settings.steer.chillLevel",
-      0, 200,
-      "Torque changes above this value are more aggressive about adjusting to it.",
-      "Default: 30, Min: 0, Max: 200\n"
-        "A higher value can help prevent steering osculation."
-    }
-  };
-  addItem(new LabelControl("ACC Eco",
-                                  "ADVANCED: Torque change chill level",
-                                  "A lower value allows for faster torque adjustments.",
-                                  this,
-                                  "../assets/img_chffr_wheel.png",
-                                  &chillLevelConfigs));
-
-
 }
 
 TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
