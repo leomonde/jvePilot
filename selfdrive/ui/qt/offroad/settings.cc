@@ -154,7 +154,7 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "../assets/jvepilot/settings/icon_wp_mod.png",
                            this));
 
-  // Minimum Steer Check
+  // Vision Only
   addItem(new ParamControl("jvePilot.settings.visionOnly",
                            "ADVANCED: Vision only",
                            "Enable this setting if you are seeing the lead car yellow triangle acting erratically.",
@@ -167,6 +167,31 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "Enable this setting if the lead car yellow triangle is reversed on the X axis",
                            "../assets/offroad/icon_calibration.png",
                            this));
+
+  // Torque change chill level
+  addItem(new ParamControl("jvePilot.settings.steer.chillLevel",
+                           "ADVANCED: Torque change chill level",
+                           "When torque changes are less that this value, be less aggressive about adjusting to it."
+                           "\nThis can help prevent steering osculation.  A lower value allows for faster adjustments.",
+                           "../assets/jvepilot/settings/icon_wp_mod.png",
+                           this));
+
+  QList<struct ConfigButton> chillLevelConfigs = {
+    { "jvePilot.settings.steer.chillLevel",
+      0, 200,
+      "Torque changes above this value are more aggressive about adjusting to it.",
+      "Default: 30, Min: 0, Max: 200\n"
+        "A higher value can help prevent steering osculation."
+    }
+  };
+  addItem(new LabelControl("ACC Eco",
+                                  "ADVANCED: Torque change chill level",
+                                  "A lower value allows for faster torque adjustments.",
+                                  this,
+                                  "../assets/img_chffr_wheel.png",
+                                  &chillLevelConfigs));
+
+
 }
 
 TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
