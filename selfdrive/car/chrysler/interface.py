@@ -106,7 +106,7 @@ class CarInterface(CarInterfaceBase):
     # Cranked steering alert hysteresis logic
     if abs(self.CS.out.steeringAngleDeg) > 420:
       self.above_steer_angle_alert = True
-    elif abs(self.CS.out.steeringAngleDeg) < 320:
+    elif abs(self.CS.out.steeringAngleDeg) < 380:
       self.above_steer_angle_alert = False
 
     # Low speed steer alert hysteresis logic
