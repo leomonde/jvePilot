@@ -111,6 +111,14 @@ class CarInterface(CarInterfaceBase):
     if self.low_speed_alert:
       events.add(car.CarEvent.EventName.belowSteerSpeed)
 
+    # Cranked steering alert hysteresis logic
+    if abs(self.CS.out.steeringAngleDeg) > 420:
+      self.above_steer_angle_alert = True
+    elif abs(self.CS.out.steeringAngleDeg) < 380:
+      self.above_steer_angle_alert = False
+    if self.above_steer_angle_alert:
+      events.add(car.CarEvent.EventName.steerTempUnavailableSilent)
+
     ret.events = events.to_msg()
 
     return ret
