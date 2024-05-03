@@ -104,9 +104,9 @@ class CarInterface(CarInterfaceBase):
     events = self.create_common_events(ret, extra_gears=[car.CarState.GearShifter.low])
 
     # Cranked steering alert hysteresis logic
-    if abs(self.CS.out.steeringAngleDeg) > 420:
+    if abs(self.CS.out.steeringAngleDeg) > 360:
       self.above_steer_angle_alert = True
-    elif abs(self.CS.out.steeringAngleDeg) < 380:
+    elif abs(self.CS.out.steeringAngleDeg) < 340:
       self.above_steer_angle_alert = False
 
     # Low speed steer alert hysteresis logic
