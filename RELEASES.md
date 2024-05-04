@@ -4,8 +4,8 @@ Visit http://bit.ly/jvereadme for more information
 * New Feature!: Auto enable ACC
   * Setting to have ACC enabled and ready to go on ignition without having to press the button
   * Paired with Always On Lateral Control so jvePilot is ready to steering as soon as you go
-* Prevent LKAS errors for WP users when turning sharply.  (Like when parking)
-* Adjusts when Always On Lateral Control alerts 
+* Prevent LKAS errors for WP users when turning sharply.  (Like when parking) (More thanks to @mikejakes)
+* Adjusted when Always On Lateral Control alerts
 * Added Torque Chill Level setting
   * Adjust when torque changes quickly based on how much the torque needs to be changed
 
