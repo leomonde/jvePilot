@@ -100,9 +100,9 @@ class CarState(CarStateBase):
       self.auto_high_beam = cp_cam.vl["DAS_6"]['AUTO_HIGH_BEAM_ON']
       ret.steerFaultTemporary = cp.vl["EPS_3"]["DASM_FAULT"] == 1
     else:
-      if abs(ret.steeringAngleDeg) > 200:
+      if abs(ret.steeringAngleDeg) > 20:
         self.above_steer_angle_alert = True
-      elif abs(ret.steeringAngleDeg) < 180:
+      elif abs(ret.steeringAngleDeg) < 10:
         self.above_steer_angle_alert = False
 
       ret.steerFaultTemporary = cp.vl["EPS_2"]["LKAS_TEMPORARY_FAULT"] == 1 or cp.vl["EPS_2"]["LKAS_STATE"] == 12 or self.above_steer_angle_alert

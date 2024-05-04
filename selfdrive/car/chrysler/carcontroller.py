@@ -88,7 +88,7 @@ class CarController:
       high_steer = self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED
       lkas_control_bit = self.lkas_control_bit_prev
       if self.steerNoMinimum:
-        lkas_control_bit = CC.latActive or not high_steer  # never turn off low steer
+        lkas_control_bit = CC.latActive or not high_steer  # never turn off vehicles that can already low steer
       elif CS.out.vEgo > self.CP.minSteerSpeed:
         lkas_control_bit = True
       elif high_steer:
@@ -97,8 +97,6 @@ class CarController:
       elif self.CP.carFingerprint in RAM_CARS:
         if CS.out.vEgo < (self.CP.minSteerSpeed - 0.5):
           lkas_control_bit = False
-
-      lkas_control_bit = lkas_control_bit and not CS.out.steerFaultTemporary
 
       if not self.lkas_control_bit_prev and CC.jvePilotState.carControl.aolcAvailable and CC.jvePilotState.carControl.aolcAvailable != self.last_aolc_ready:
         self.next_lkas_control_change = self.frame + 70
