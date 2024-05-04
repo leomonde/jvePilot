@@ -77,6 +77,20 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                                   this,
                                   &autoFollowConfigs));
 
+  // Always One Lateral Control
+  addItem(new ParamControl("jvePilot.settings.steer.aolc",
+                           "Always On Lateral Control",
+                           "When enabled and ACC is ready, jvePilot will steer even if ACC isn't active",
+                           "../assets/img_chffr_wheel.png",
+                           this));
+
+  // Auto enable ACC on start
+  addItem(new ParamControl("jvePilot.settings.autoEnableAcc",
+                           "ACC ready on start",
+                           "When enabled, ACC will be made ready on start without having to press the ACC On/Off button",
+                           "../assets/img_circled_check.png",
+                           this));
+
   // reverseAccSpeedChange
   addItem(new ParamControl("jvePilot.settings.reverseAccSpeedChange",
                                   "Reverse ACC +/- Speeds",
@@ -124,6 +138,13 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
         "Compensate for mounting your device off-center in the windshield."
         "\nFor example, 0.04 if your device is 4cm left of center."
         "\nNOTE: This is not how far the CAMERA is off-center, but how far the MOUNT/DEVICE is off-center."
+    },
+    { "jvePilot.settings.steer.chillLevel",
+      0, 200,
+      "Torque Chill Level",
+      "Default: 20, Min: 0, Max: 200\n"
+        "Torque changes above this value are more aggressive about adjusting to it."
+        "\nA higher value can help prevent steering osculation."
     }
   };
   addItem(new LabelControl("jvePilot Control Settings",
@@ -133,13 +154,6 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                                   "../assets/jvepilot/settings/icon_misc.png",
                                   &miscConfigs));
 
-  // Always One Lateral Control
-  addItem(new ParamControl("jvePilot.settings.steer.aolc",
-                           "Always On Lateral Control",
-                           "When enabled and ACC is enabled, jvePilot will steer even if ACC isn't active",
-                           "../assets/img_chffr_wheel.png",
-                           this));
-
   // Minimum Steer Check
   addItem(new ParamControl("jvePilot.settings.steer.noMinimum",
                            "ADVANCED: Speed Spoofing Mod",
@@ -147,7 +161,7 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "../assets/jvepilot/settings/icon_wp_mod.png",
                            this));
 
-  // Minimum Steer Check
+  // Vision Only
   addItem(new ParamControl("jvePilot.settings.visionOnly",
                            "ADVANCED: Vision only",
                            "Enable this setting if you are seeing the lead car yellow triangle acting erratically.",
@@ -159,6 +173,14 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "ADVANCED: Reverse Radar X Axis",
                            "Enable this setting if the lead car yellow triangle is reversed on the X axis",
                            "../assets/offroad/icon_calibration.png",
+                           this));
+
+  // Torque change chill level
+  addItem(new ParamControl("jvePilot.settings.steer.chillLevel",
+                           "ADVANCED: Torque change chill level",
+                           "When torque changes are less that this value, be less aggressive about adjusting to it."
+                           "\nThis can help prevent steering osculation.  A lower value allows for faster adjustments.",
+                           "../assets/jvepilot/settings/icon_wp_mod.png",
                            this));
 }
 

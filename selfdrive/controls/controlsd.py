@@ -34,6 +34,7 @@ from openpilot.selfdrive.controls.lib.vehicle_model import VehicleModel
 from openpilot.system.hardware import HARDWARE
 from openpilot.system.version import get_short_branch
 from common.cached_params import CachedParams
+from openpilot.selfdrive.car.interfaces import FORWARD_GEARS
 
 SOFT_DISABLE_TIME = 3  # seconds
 LDW_MIN_SPEED = 31 * CV.MPH_TO_MS
@@ -714,7 +715,7 @@ class Controls:
     # Check which actuators can be enabled
     standstill = CS.vEgo <= max(self.CP.minSteerSpeed, MIN_LATERAL_CONTROL_SPEED) or CS.standstill
 
-    CC.jvePilotState.carControl.aolcAvailable = self.aolc_enabled and CS.cruiseState.available and not self.has_blocking_events([EventName.reverseGear])
+    CC.jvePilotState.carControl.aolcAvailable = self.aolc_enabled and CS.cruiseState.available and CS.gearShifter in FORWARD_GEARS
 
     aolcActive = CC.jvePilotState.carControl.aolcAvailable and not self.has_events_blocking_aolc()
 
