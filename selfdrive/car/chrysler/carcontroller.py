@@ -111,17 +111,7 @@ class CarController:
       self.lkas_control_bit_prev = lkas_control_bit
 
       # steer torque
-      if CS.out.vEgo < 2.:  # limit steer
-        temp_up = self.params.STEER_DELTA_UP
-        temp_down = self.params.STEER_DELTA_DOWN
-
-        self.params.STEER_DELTA_UP = self.params.STEER_DELTA_DOWN = 1
-        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps,
-                                                     self.params)
-        self.params.STEER_DELTA_UP = temp_up
-        self.params.STEER_DELTA_DOWN = temp_down
-      else:
-        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
+      apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
 
       if not CC.latActive or not lkas_control_bit:
         apply_steer = 0
