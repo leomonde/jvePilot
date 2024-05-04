@@ -13,7 +13,7 @@ Come join us on [Discord](https://discord.gg/r8yaDBdnwH)!
   * [What is this Fork?](#what-is-this-fork)
   * [Benefits of jvePilot](#benefits-of-jvepilot)
     + [Longitudinal control](#longitudinal-control)
-    + [Auto Resume](#auto-resume)
+    + [Always On Lateral Control](#always-on-lateral-control)
     + [Auto Follow](#auto-follow)
     + [ACC Eco](#acc-eco)
   * [How to use it](#how-to-use-it)
@@ -46,6 +46,7 @@ This is my personal OpenPilot fork that includes features that I feel make it a 
 * Slow for cars cutting in before ACC does
 * Slow in a turn, so you don't have to change the set speed yourself (Speeds are configurable)
 * Always On Lateral Control so steering is active even if ACC isn't
+* Auto enable ACC on start
 * Auto resume after ACC comes to a stop behind vehicle (Can be disabled)
 * Auto follow feature to adjust the follow distance based on speed (Speeds are configurable)
 * ACC Eco to limit the throttle when accelerating  
@@ -223,6 +224,10 @@ When enabled, jvePilot will continue to steer without having to engage ACC.
 You will still need to enable ACC using the ACC button on the steering wheel. 
 * Default: False 
 * Vehicle Restart Required: No
+
+# ACC Ready on Start
+When enabled, jvePilot will enable ACC on start   
+* Default: True
 
 # Advanced settings
 These settings are for advanced users doing advanced things. 

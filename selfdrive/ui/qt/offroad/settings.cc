@@ -86,7 +86,7 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
 
   // Auto enable ACC on start
   addItem(new ParamControl("jvePilot.settings.autoEnableAcc",
-                           "ACC ready on start",
+                           "ACC Ready on Start",
                            "When enabled, ACC will be made ready on start without having to press the ACC On/Off button",
                            "../assets/img_circled_check.png",
                            this));

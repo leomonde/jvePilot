@@ -1,7 +1,7 @@
 Version jvePilot-0.9.6(v3.15.1)
 ========================
 Visit http://bit.ly/jvereadme for more information
-* New Feature!: Auto enable ACC
+* New Feature!: ACC Ready on Start
   * Setting to have ACC enabled and ready to go on ignition without having to press the button
   * Paired with Always On Lateral Control so jvePilot is ready to steering as soon as you go
 * Prevent LKAS errors for WP users when turning sharply.  (Like when parking) (More thanks to @mikejakes)
