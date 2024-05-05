@@ -462,7 +462,7 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
 
   if (accEco >= 0) { // got data yet?
     // Calculate offsets for the icon's position
-    int xOffset = -35; // offset for x-coordinate
+    int xOffset = -28; // offset for x-coordinate
     int yOffset = 200; // offset for y-coordinate
     drawIcon(p,
              QPoint(rect().right() - radius / 2 - bdr_s * 2 - xOffset,
