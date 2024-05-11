@@ -70,7 +70,8 @@ class CarController:
                                           "1" if CC.jvePilotState.carControl.lkasButtonLight else "0")
       CC.jvePilotState.notifyUi = True
     if self.frame % 10 == 0:
-      new_msg = chryslercan.create_lkas_heartbit(self.packer, 1 if CC.jvePilotState.carControl.lkasButtonLight else 0, CS.lkasHeartbit)
+      lkas_disabled = CC.jvePilotState.carControl.lkasButtonLight or CS.out.steerFaultPermanent
+      new_msg = chryslercan.create_lkas_heartbit(self.packer, lkas_disabled, CS.lkasHeartbit)
       can_sends.append(new_msg)
     self.wheel_button_control(CC, CS, can_sends, CC.enabled, das_bus, CC.cruiseControl.cancel, CC.cruiseControl.resume)
 
