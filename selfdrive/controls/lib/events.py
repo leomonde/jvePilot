@@ -435,7 +435,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, 1.8),
   },
 
-  EventName.steerDisabled: {
+  EventName.lkasUserDisabled: {
     ET.WARNING: Alert(
       "Steering Disabled",
       "Press the LKAS button on the dash to enable",
