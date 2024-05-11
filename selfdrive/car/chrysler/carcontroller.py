@@ -42,6 +42,7 @@ class CarController:
     self.steerNoMinimum = self.settingsParams.get_bool("jvePilot.settings.steer.noMinimum")
     self.auto_enable_acc = self.settingsParams.get_bool("jvePilot.settings.autoEnableAcc")
 
+
     self.autoFollowDistanceLock = None
     self.button_frame = 0
     self.last_target = 0
@@ -66,8 +67,8 @@ class CarController:
     # jvePilot
     if CS.button_pressed(ButtonType.lkasToggle, False):
       CC.jvePilotState.carControl.lkasButtonLight = not CC.jvePilotState.carControl.lkasButtonLight
-      self.settingsParams.put("jvePilot.settings.lkasButtonLight",
-                              "1" if CC.jvePilotState.carControl.lkasButtonLight else "0")
+      self.settingsParams.put_nonblocking("jvePilot.settings.lkasButtonLight",
+                                          "1" if CC.jvePilotState.carControl.lkasButtonLight else "0")
       CC.jvePilotState.notifyUi = True
     if self.frame % 10 == 0:
       new_msg = chryslercan.create_lkas_heartbit(self.packer, 1 if CC.jvePilotState.carControl.lkasButtonLight else 0, CS.lkasHeartbit)
@@ -79,7 +80,7 @@ class CarController:
       if CS.lkas_car_model != -1:
         can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, CC.latActive and self.lkas_control_bit_prev, CC.hudControl.visualAlert,
                                                      self.hud_count, CS.lkas_car_model, CS.auto_high_beam,
-                                                     CC.enabled or CC.jvePilotState.carControl.aolcAvailable, CS.out.cruiseState.available))
+                                                     (CC.enabled or CC.jvePilotState.carControl.aolcAvailable) and not CC.jvePilotState.carControl.lkasButtonLight, CS.out.cruiseState.available))
         self.hud_count += 1
 
     # steering
@@ -113,7 +114,7 @@ class CarController:
       # steer torque
       apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
 
-      if not CC.latActive or not lkas_control_bit:
+      if not CC.latActive or not lkas_control_bit or CC.jvePilotState.carControl.lkasButtonLight:
         apply_steer = 0
 
       self.apply_steer_last = apply_steer
@@ -183,7 +184,7 @@ class CarController:
     elif CC.jvePilotState.carControl.accEco == 2:  # if eco mode
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel2', 1000)
 
-    experimental_mode = self.cachedParams.get_bool("ExperimentalMode", 1000) and self.cachedParams.get_bool('jvePilot.settings.lkasButtonLight', 1000)
+    experimental_mode = self.cachedParams.get_bool("ExperimentalMode", 1000)
     if experimental_mode:
       acc_boost = clip(CC.actuators.accel, 0, eco_limit * CV.MPH_TO_MS) if eco_limit else 0
     else:
