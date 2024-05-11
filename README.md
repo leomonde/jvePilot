@@ -14,6 +14,7 @@ Come join us on [Discord](https://discord.gg/r8yaDBdnwH)!
   * [Benefits of jvePilot](#benefits-of-jvepilot)
     + [Longitudinal control](#longitudinal-control)
     + [Always On Lateral Control](#always-on-lateral-control)
+    + [ACC Ready on Start](#acc-ready-on-start)
     + [Auto Follow](#auto-follow)
     + [ACC Eco](#acc-eco)
   * [How to use it](#how-to-use-it)
@@ -47,7 +48,6 @@ This is my personal OpenPilot fork that includes features that I feel make it a 
 * Slow in a turn, so you don't have to change the set speed yourself (Speeds are configurable)
 * Always On Lateral Control so steering is active even if ACC isn't
 * Auto enable ACC on start
-* Auto resume after ACC comes to a stop behind vehicle (Can be disabled)
 * Auto follow feature to adjust the follow distance based on speed (Speeds are configurable)
 * ACC Eco to limit the throttle when accelerating  
 * Syncs jvePilot display speed with the vehicle speedometer 
@@ -71,11 +71,9 @@ Always On Lateral Control, or AOLC, is a feature that allows jvePilot to steer e
 Enabling this feature will allow a driver to take control of gas/brakes while still retaining the automatic steering provided by jvePilot.
 Because the low torque applied to the steering, it's very easy to override the steering if needed.
 
-### Auto Resume
-ACC will come to a stop behind vehicles, however, if stopped too long, it will either stay stopped until resume is pressed, or simply disengage ACC altogether.  
-For the case where ACC simply cancels, the driver has to press and hold the brake to keep the vehicle stopped.
-Auto resume makes life easier by resuming ACC when the vehicle in front of you begin to move, or, you let off the brake after coming to a standstill.
-While stopped, you can still disengage jvePilot by pressing the Cancel button. 
+### ACC Ready on Start
+When enabled, jvePilot will enable ACC on start.  
+This pairs well with Always On Lateral Control so lateral control is ready to go without having to remember to press the ACC on/off button.      
 
 ### Auto Follow
 Auto Follow is a way to automate the changing of the stock follow distance setting.
@@ -158,11 +156,6 @@ Reverse the stock ACC +/- button's 1mph on short press and 5mph on long press.  
 * Default: On
 * Vehicle Restart Required: Yes
 
-## Auto Resume
-This feature allows jvePilot to auto resume from an ACC stop.
-* Default: On
-* Vehicle Restart Required: Yes
-
 ## Auto Follow
 If you don't want auto follow enabled on every start, turn this off.
 ### 1-2 Bar Change Over
@@ -218,16 +211,6 @@ Use positive values if your device is to the left of center and negative if it's
 * Units: Meters
 * Vehicle Restart Required: No
 * Min/Max values -1, 1
-
-# Always On Lateral Control
-When enabled, jvePilot will continue to steer without having to engage ACC.  
-You will still need to enable ACC using the ACC button on the steering wheel. 
-* Default: False 
-* Vehicle Restart Required: No
-
-# ACC Ready on Start
-When enabled, jvePilot will enable ACC on start   
-* Default: True
 
 # Advanced settings
 These settings are for advanced users doing advanced things. 

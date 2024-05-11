@@ -1,4 +1,4 @@
-Version jvePilot-0.9.6(v3.15.1)
+Version jvePilot-0.9.6(v3.16)
 ========================
 Visit http://bit.ly/jvereadme for more information
 * New Feature!: ACC Ready on Start
