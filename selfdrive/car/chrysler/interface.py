@@ -111,6 +111,9 @@ class CarInterface(CarInterfaceBase):
     if self.low_speed_alert:
       events.add(car.CarEvent.EventName.belowSteerSpeed)
 
+    if self.CC.jvePilotState.carControl.lkasButtonLight:
+      events.add(car.CarEvent.EventName.steerDisabledSilent)
+
     ret.events = events.to_msg()
 
     return ret

@@ -42,7 +42,6 @@ class CarController:
     self.steerNoMinimum = self.settingsParams.get_bool("jvePilot.settings.steer.noMinimum")
     self.auto_enable_acc = self.settingsParams.get_bool("jvePilot.settings.autoEnableAcc")
 
-
     self.autoFollowDistanceLock = None
     self.button_frame = 0
     self.last_target = 0
@@ -75,12 +74,10 @@ class CarController:
       can_sends.append(new_msg)
     self.wheel_button_control(CC, CS, can_sends, CC.enabled, das_bus, CC.cruiseControl.cancel, CC.cruiseControl.resume)
 
-    lat_active = CS.latActive and not CC.jvePilotState.carControl.lkasButtonLight
-
     # HUD alerts
     if self.frame % 25 == 0:
       if CS.lkas_car_model != -1:
-        can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, lat_active and self.lkas_control_bit_prev, CC.hudControl.visualAlert,
+        can_sends.append(chryslercan.create_lkas_hud(self.packer, self.CP, CC.latActive and self.lkas_control_bit_prev, CC.hudControl.visualAlert,
                                                      self.hud_count, CS.lkas_car_model, CS.auto_high_beam,
                                                      CC.enabled or CC.jvePilotState.carControl.aolcAvailable, CS.out.cruiseState.available))
         self.hud_count += 1
@@ -116,7 +113,7 @@ class CarController:
       # steer torque
       apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
 
-      if not lat_active or not lkas_control_bit:
+      if not CC.latActive or not lkas_control_bit:
         apply_steer = 0
 
       self.apply_steer_last = apply_steer
