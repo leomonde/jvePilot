@@ -1,6 +1,11 @@
-Version jvePilot-0.9.6(v3.16)
+Version jvePilot-0.9.6(v3.16.1)
 ========================
 Visit http://bit.ly/jvereadme for more information
+* LKAS button now toggles use of LKAS instead of toggling experimental mode
+  * Experimental mode can be toggled using steering/experimental button on the comma screen
+
+Version jvePilot-0.9.6(v3.16)
+========================
 * New Feature!: ACC Ready on Start
   * Setting to have ACC enabled and ready to go on ignition without having to press the button
   * Paired with Always On Lateral Control so jvePilot is ready to steering as soon as you go
