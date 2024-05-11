@@ -719,8 +719,11 @@ class Controls:
 
     aolcActive = CC.jvePilotState.carControl.aolcAvailable and not self.has_events_blocking_aolc()
 
-    CC.latActive = (self.active or aolcActive) and not CS.steerFaultTemporary and not CS.steerFaultPermanent and \
-                   (not standstill or self.joystick_mode)
+    CC.latActive = (self.active or aolcActive) \
+                   and not CS.steerFaultTemporary \
+                   and not CS.steerFaultPermanent \
+                   and not CC.jvePilotState.carControl.lkasButtonLight \
+                   and (not standstill or self.joystick_mode)
     CC.longActive = self.enabled and not self.events.contains(ET.OVERRIDE_LONGITUDINAL) and self.CP.openpilotLongitudinalControl
 
     actuators = CC.actuators
@@ -941,7 +944,7 @@ class Controls:
     controlsState.startMonoTime = int(start_time * 1e9)
     controlsState.forceDecel = bool(force_decel)
     controlsState.canErrorCounter = self.card.can_rcv_cum_timeout_counter
-    controlsState.experimentalMode = self.params.get_bool("ExperimentalMode") and self.params.get_bool('jvePilot.settings.lkasButtonLight') and self.CP.openpilotLongitudinalControl
+    controlsState.experimentalMode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
 
     lat_tuning = self.CP.lateralTuning.which()
     if self.joystick_mode:

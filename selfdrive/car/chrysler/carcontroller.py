@@ -66,11 +66,12 @@ class CarController:
     # jvePilot
     if CS.button_pressed(ButtonType.lkasToggle, False):
       CC.jvePilotState.carControl.lkasButtonLight = not CC.jvePilotState.carControl.lkasButtonLight
-      self.settingsParams.put("jvePilot.settings.lkasButtonLight",
-                              "1" if CC.jvePilotState.carControl.lkasButtonLight else "0")
+      self.settingsParams.put_nonblocking("jvePilot.settings.lkasButtonLight",
+                                          "1" if CC.jvePilotState.carControl.lkasButtonLight else "0")
       CC.jvePilotState.notifyUi = True
     if self.frame % 10 == 0:
-      new_msg = chryslercan.create_lkas_heartbit(self.packer, 1 if CC.jvePilotState.carControl.lkasButtonLight else 0, CS.lkasHeartbit)
+      lkas_disabled = CC.jvePilotState.carControl.lkasButtonLight or CS.out.steerFaultPermanent
+      new_msg = chryslercan.create_lkas_heartbit(self.packer, lkas_disabled, CS.lkasHeartbit)
       can_sends.append(new_msg)
     self.wheel_button_control(CC, CS, can_sends, CC.enabled, das_bus, CC.cruiseControl.cancel, CC.cruiseControl.resume)
 
@@ -183,7 +184,7 @@ class CarController:
     elif CC.jvePilotState.carControl.accEco == 2:  # if eco mode
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel2', 1000)
 
-    experimental_mode = self.cachedParams.get_bool("ExperimentalMode", 1000) and self.cachedParams.get_bool('jvePilot.settings.lkasButtonLight', 1000)
+    experimental_mode = self.cachedParams.get_bool("ExperimentalMode", 1000)
     if experimental_mode:
       acc_boost = clip(CC.actuators.accel, 0, eco_limit * CV.MPH_TO_MS) if eco_limit else 0
     else:

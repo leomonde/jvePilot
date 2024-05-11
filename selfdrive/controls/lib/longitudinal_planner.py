@@ -77,8 +77,7 @@ class LongitudinalPlanner:
     except (ValueError, TypeError):
       self.personality = log.LongitudinalPersonality.standard
 
-    self.experimental_mode = self.cachedParams.get_bool('jvePilot.settings.lkasButtonLight', 500) \
-                             and self.cachedParams.get_bool('ExperimentalMode', 500)
+    self.experimental_mode = self.cachedParams.get_bool('ExperimentalMode', 500)
     e2e = self.experimental_mode and self.CP.openpilotLongitudinalControl
     self.mpc.mode = 'blended' if e2e else 'acc'
 

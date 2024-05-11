@@ -435,12 +435,12 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, 1.8),
   },
 
-  EventName.accBrakeHold: {
+  EventName.lkasUserDisabled: {
     ET.WARNING: Alert(
-      "WAITING TO RESUME ACC",
-      "Release brake to resume ACC",
-      AlertStatus.userPrompt, AlertSize.mid,
-      Priority.LOW, VisualAlert.none, AudibleAlert.none, .2, .2, .2),
+      "Steering Disabled",
+      "Press the LKAS button on the dash to enable",
+      AlertStatus.userPrompt, AlertSize.small,
+      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, 1.8),
   },
 
   EventName.preDriverDistracted: {
