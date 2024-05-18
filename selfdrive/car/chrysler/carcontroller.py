@@ -127,6 +127,7 @@ class CarController:
     personality = DRIVE_PERSONALITY[eco_limit][distance]
     if personality != self.last_personality:
       self.last_personality = personality
+      print(f"personality={personality}")
       self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
 
     self.frame += 1
@@ -196,8 +197,7 @@ class CarController:
     if experimental_mode:
       acc_boost = clip(CC.actuators.accel, 0, eco_limit * CV.MPH_TO_MS) if eco_limit else 0
     else:
-      follow_boost = (3 - CC.jvePilotState.carState.accFollowDistance) * 0.66
-      acc_boost = follow_boost * CV.MPH_TO_MS  # add extra speed so ACC does the limiting
+      acc_boost = 0
 
     target = self.acc_hysteresis(CC.jvePilotState.carControl.vTargetFuture + acc_boost)
     if eco_limit:

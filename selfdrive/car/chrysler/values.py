@@ -60,9 +60,9 @@ RAM_HD = {CAR.RAM_HD, }
 RAM_CARS = RAM_DT | RAM_HD
 
 DRIVE_PERSONALITY = [
-  [0,0,1,2],
-  [0,1,1,2],
-  [0,1,2,2],
+  [0, 0, 1, 2],
+  [0, 1, 1, 2],
+  [0, 1, 2, 2],
 ]
 @dataclass
 class ChryslerCarInfo(CarInfo):
