@@ -3,8 +3,7 @@ from common.numpy_fast import clip
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_meas_steer_torque_limits
 from openpilot.selfdrive.car.chrysler import chryslercan
-from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags
-from openpilot.selfdrive.car.interfaces import FORWARD_GEARS
+from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags, DRIVE_PERSONALITY
 
 from selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
 from common.conversions import Conversions as CV
@@ -46,6 +45,7 @@ class CarController:
     self.button_frame = 0
     self.last_target = 0
     self.last_aolc_ready = False
+    self.last_personality = None
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
@@ -120,6 +120,14 @@ class CarController:
       self.apply_steer_last = apply_steer
 
       can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
+
+    # auto set profile
+    distance = CC.jvePilotState.carState.accFollowDistance
+    eco_limit = CC.jvePilotState.carControl.accEco
+    personality = DRIVE_PERSONALITY[eco_limit][distance]
+    if personality != self.last_personality:
+      self.last_personality = personality
+      self.params.put_nonblocking('LongitudinalPersonality', str(personality))
 
     self.frame += 1
 
