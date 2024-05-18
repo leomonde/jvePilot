@@ -3,6 +3,7 @@ Version jvePilot-0.9.6(v3.16.1)
 Visit http://bit.ly/jvereadme for more information
 * LKAS button now toggles use of LKAS instead of toggling experimental mode
   * Experimental mode can be toggled using steering/experimental button on the comma screen
+* Auto set driving personality based on follow distance and eco settings  
 
 Version jvePilot-0.9.6(v3.16)
 ========================
