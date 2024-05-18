@@ -122,12 +122,11 @@ class CarController:
       can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
 
     # auto set profile
-    distance = CC.jvePilotState.carState.accFollowDistance
-    eco_limit = CC.jvePilotState.carControl.accEco
-    personality = DRIVE_PERSONALITY[eco_limit][distance]
+    follow_distance = CC.jvePilotState.carState.accFollowDistance or 0
+    acc_eco = CC.jvePilotState.carControl.accEco or 0
+    personality = DRIVE_PERSONALITY[acc_eco][3 - follow_distance]
     if personality != self.last_personality:
       self.last_personality = personality
-      print(f"personality={personality}")
       self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
 
     self.frame += 1
@@ -188,9 +187,9 @@ class CarController:
   def hybrid_acc_button(self, CC, CS):
     # Move the adaptive curse control to the target speed
     eco_limit = None
-    if CC.jvePilotState.carControl.accEco == 1:  # if eco mode
+    if CC.jvePilotState.carControl.accEco == 1:
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel1', 1000)
-    elif CC.jvePilotState.carControl.accEco == 2:  # if eco mode
+    elif CC.jvePilotState.carControl.accEco == 2:
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel2', 1000)
 
     experimental_mode = self.cachedParams.get_bool("ExperimentalMode", 1000)
