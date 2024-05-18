@@ -127,7 +127,7 @@ class CarController:
     personality = DRIVE_PERSONALITY[eco_limit][distance]
     if personality != self.last_personality:
       self.last_personality = personality
-      self.params.put_nonblocking('LongitudinalPersonality', str(personality))
+      self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
 
     self.frame += 1
 
