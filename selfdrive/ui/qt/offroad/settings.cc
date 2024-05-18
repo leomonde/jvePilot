@@ -174,14 +174,6 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "Enable this setting if the lead car yellow triangle is reversed on the X axis",
                            "../assets/offroad/icon_calibration.png",
                            this));
-
-  // Torque change chill level
-  addItem(new ParamControl("jvePilot.settings.steer.chillLevel",
-                           "ADVANCED: Torque change chill level",
-                           "When torque changes are less that this value, be less aggressive about adjusting to it."
-                           "\nThis can help prevent steering osculation.  A lower value allows for faster adjustments.",
-                           "../assets/jvepilot/settings/icon_wp_mod.png",
-                           this));
 }
 
 TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
