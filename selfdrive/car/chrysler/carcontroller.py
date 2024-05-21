@@ -3,8 +3,7 @@ from common.numpy_fast import clip
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_meas_steer_torque_limits
 from openpilot.selfdrive.car.chrysler import chryslercan
-from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags
-from openpilot.selfdrive.car.interfaces import FORWARD_GEARS
+from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags, DRIVE_PERSONALITY
 
 from selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
 from common.conversions import Conversions as CV
@@ -46,6 +45,7 @@ class CarController:
     self.button_frame = 0
     self.last_target = 0
     self.last_aolc_ready = False
+    self.last_personality = None
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
@@ -121,6 +121,14 @@ class CarController:
 
       can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
 
+    # auto set profile
+    follow_distance = CC.jvePilotState.carState.accFollowDistance or 0
+    acc_eco = CC.jvePilotState.carControl.accEco or 0
+    personality = DRIVE_PERSONALITY[acc_eco][3 - follow_distance]
+    if personality != self.last_personality:
+      self.last_personality = personality
+      self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
+
     self.frame += 1
 
     new_actuators = CC.actuators.copy()
@@ -179,17 +187,16 @@ class CarController:
   def hybrid_acc_button(self, CC, CS):
     # Move the adaptive curse control to the target speed
     eco_limit = None
-    if CC.jvePilotState.carControl.accEco == 1:  # if eco mode
+    if CC.jvePilotState.carControl.accEco == 1:
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel1', 1000)
-    elif CC.jvePilotState.carControl.accEco == 2:  # if eco mode
+    elif CC.jvePilotState.carControl.accEco == 2:
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel2', 1000)
 
     experimental_mode = self.cachedParams.get_bool("ExperimentalMode", 1000)
     if experimental_mode:
       acc_boost = clip(CC.actuators.accel, 0, eco_limit * CV.MPH_TO_MS) if eco_limit else 0
     else:
-      follow_boost = (3 - CC.jvePilotState.carState.accFollowDistance) * 0.66
-      acc_boost = follow_boost * CV.MPH_TO_MS  # add extra speed so ACC does the limiting
+      acc_boost = 0
 
     target = self.acc_hysteresis(CC.jvePilotState.carControl.vTargetFuture + acc_boost)
     if eco_limit:
