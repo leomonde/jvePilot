@@ -675,6 +675,7 @@ class Controls:
       self.current_alert_types.append(ET.WARNING)
       if self.has_blocking_events([EventName.wrongCarMode]):
         self.events.add(EventName.pcmDisable)
+        self.current_alert_types.append(ET.USER_DISABLE)
       elif self.has_events_blocking_aolc() and not CS.standstill:
         for e in AOLC_IGNORED_EVENTS:
           if e in self.events.names:
