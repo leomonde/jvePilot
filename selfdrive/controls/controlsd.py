@@ -673,7 +673,9 @@ class Controls:
       self.current_alert_types.append(ET.WARNING)
     elif self.jvePilotState.carControl.aolcAvailable:
       self.current_alert_types.append(ET.WARNING)
-      if self.has_events_blocking_aolc() and not CS.standstill:
+      if self.has_blocking_events([EventName.wrongCarMode]):
+        self.events.add(EventName.pcmDisable)
+      elif self.has_events_blocking_aolc() and not CS.standstill:
         for e in AOLC_IGNORED_EVENTS:
           if e in self.events.names:
             self.events.names.remove(e)
