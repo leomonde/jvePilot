@@ -280,9 +280,10 @@ class CarInterfaceBase(ABC):
       events.add(EventName.accFaulted)
     if cs_out.steeringPressed:
       events.add(EventName.steerOverride)
-
-    if not cs_out.cruiseState.enabled and len(events.names) and cs_out.vEgo <= gas_resume_speed:
-      events.add(EventName.pcmDisable)  # added safety.  Disable on anything sus if waiting to resume
+    if cs_out.brakePressed and cs_out.standstill:
+      events.add(EventName.preEnableStandstill)
+    if cs_out.gasPressed:
+      events.add(EventName.gasPressedOverride)
 
     # Handle button presses
     for b in cs_out.buttonEvents:
