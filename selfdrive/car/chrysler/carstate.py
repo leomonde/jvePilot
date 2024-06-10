@@ -105,7 +105,8 @@ class CarState(CarStateBase):
       elif abs(ret.steeringAngleDeg) < 180:
         self.above_steer_angle_alert = False
 
-      ret.steerFaultTemporary = cp.vl["EPS_2"]["LKAS_TEMPORARY_FAULT"] == 1 or cp.vl["EPS_2"]["LKAS_STATE"] == 12 or self.above_steer_angle_alert
+      backward = cp.vl["ESP_6"]["MOVING_FORWARD"] == 0 and ret.vEgoRaw > 0
+      ret.steerFaultTemporary = cp.vl["EPS_2"]["LKAS_TEMPORARY_FAULT"] == 1 or cp.vl["EPS_2"]["LKAS_STATE"] == 12 or self.above_steer_angle_alert or backward
       ret.steerFaultPermanent = cp.vl["EPS_2"]["LKAS_STATE"] == 4
 
     # blindspot sensors
