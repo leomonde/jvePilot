@@ -126,7 +126,7 @@ def build_metadata_from_dict(build_metadata: dict) -> BuildMetadata:
               release_notes=release_notes,
               git_commit=git_commit,
               git_origin=git_origin,
-              git_commit_date=git_commit_date,F
+              git_commit_date=git_commit_date,
               build_style=build_style,
               is_dirty=False))
 
