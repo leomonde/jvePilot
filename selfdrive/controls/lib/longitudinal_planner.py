@@ -143,7 +143,7 @@ class LongitudinalPlanner:
     self.v_desired_filter.x = self.v_desired_filter.x + self.dt * (self.a_desired + a_prev) / 2.0
 
     if self.cachedParams.get('jvePilot.settings.slowInCurves', 5000) == "1" \
-        and not self.experimental_mode:
+        and not sm['controlsState'].experimentalMode:
       curv = abs(sm['controlsState'].desiredCurvature)
       if curv != 0:
         self.v_desired_filter.x = float(min(self.v_desired_filter.x, self.limit_speed_in_curv(sm, curv)))
