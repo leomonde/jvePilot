@@ -4,7 +4,18 @@ Visit http://bit.ly/jvereadme for more information
 * LKAS button now toggles use of LKAS instead of toggling experimental mode
   * Experimental mode can be toggled using steering/experimental button on the comma screen
 * Auto set driving personality based on follow distance and eco settings
-* Turning ACC off sounds the disengage sound instead of loud warnings  
+* Turning ACC off sounds the disengage sound instead of loud warnings
+* Version 0.9.7 (2024-06-13)
+  * New driving model
+    * Inputs the past curvature for smoother and more accurate lateral control
+    * Simplified neural network architecture in the model's last layers
+    * Minor fixes to desire augmentation and weight decay
+  * New driver monitoring model
+    * Improved end-to-end bit for phone detection
+  * Adjust driving personality with the follow distance button
+  * Support for hybrid variants of supported Ford models
+  * Fingerprinting without the OBD-II port on all cars
+  * Improved fuzzy fingerprinting for Ford and Volkswagen
 
 Version jvePilot-0.9.6(v3.16)
 ========================
@@ -34,7 +45,10 @@ Version jvePilot-0.9.6(v3.15)
     * Directly outputs curvature for lateral control
   * New driver monitoring model
     * Trained on larger dataset
-  * AGNOS 9
+  * Model path UI
+  * Shows where driving model wants to be
+  * Shows what model is seeing more clearly, but more jittery
+* AGNOS 9
   * comma body streaming and controls over WebRTC
   * Improved fuzzy fingerprinting for many makes and models
   * Alpha longitudinal support for new Toyota models
@@ -56,7 +70,7 @@ Version jvePilot-0.9.5(v3.14.1)
     * Improved navigate on openpilot performance using navigation instructions as an additional model input
     * Do lateral planning inside the model
     * New vision transformer architecture
-  
+
 Version jvePilot-0.9.4(v3.14.0)
 ========================
 * comma 3X support
@@ -123,7 +137,7 @@ Version jvePilot-0.9.1(v3.13.1)
 * LKAS button can now toggle experimental mode that slows for stop lights and stop signs.
   * Enable Experimental Mode in the dash will make the mode available to toggle using the button
   * When button is lit, experimental mode will be enabled.
-* Add option to ignore the radar and use vision only 
+* Add option to ignore the radar and use vision only
 * Add Fingerprint V1 for AUS Jeep Grand Cherokee Trailhawk
 * Added @Miniz199922's 2019 Grand Cherokee Fingerprint
 * Update to 0.9.1
@@ -179,7 +193,7 @@ Version jvePilot-0.9.1(v3.13.1)
 
 Version jvePilot-0.8.16(v3.12.0)
 ========================
-* Adjust steer at 100hz 
+* Adjust steer at 100hz
 * Revert steer torque rate limits
 * Update to 0.8.16
   * New driving model
@@ -215,7 +229,7 @@ Version jvePilot-0.8.15(v3.11.1)
 Version jvePilot-0.8.15(v3.11.0)
 ========================
 * Fix disengage on accelerator option
-* Lane less is now the default (Enable LKAS dash button to switch to lane lines)  
+* Lane less is now the default (Enable LKAS dash button to switch to lane lines)
 * Update to 0.8.15
   * New driving model
     * Path planning uses end-to-end output instead of lane lines at all times
@@ -253,7 +267,7 @@ Version jvePilot-0.8.15(v3.11.0)
 Version jvePilot-0.8.14(v3.10.0)
 ========================
 * New radar code from xps's fork
-* Restore the 9mph min steer on some models (It seems to be a hard minimum) 
+* Restore the 9mph min steer on some models (It seems to be a hard minimum)
 * 2022 Pacifica Hybrid fingerprint (Thanks @TheWizard)
 * Update to 0.8.14
   * New driving model
@@ -775,7 +789,7 @@ Version 0.5.13 (2019-05-31)
  * Reduce CPU utilization by 20% and improve stability
  * Temporarily remove mapd functionalities to improve stability
  * Add openpilot record-only mode for unsupported cars
- * Synchronize controlsd to boardd to reduce latency
+ * Synchronize controlsd to pandad to reduce latency
  * Remove panda support for Subaru giraffe
 
 Version 0.5.12 (2019-05-16)
@@ -1111,7 +1125,7 @@ Version 0.2.8  (2017-02-27)
 Version 0.2.7  (2017-02-08)
 ===========================
  * Better performance and pictures at night
- * Fix ptr alignment issue in boardd
+ * Fix ptr alignment issue in pandad
  * Fix brake error light, fix crash if too cold
 
 Version 0.2.6  (2017-01-31)
@@ -1143,7 +1157,7 @@ Version 0.2.2  (2017-01-10)
 Version 0.2.1  (2016-12-14)
 ===========================
  * Performance improvements, removal of more numpy
- * Fix boardd process priority
+ * Fix pandad process priority
  * Make counter timer reset on use of steering wheel
 
 Version 0.2  (2016-12-12)
