@@ -148,19 +148,6 @@ class CarController(CarControllerBase):
     if cancel:
       buttons_to_press = ['ACC_Cancel']
     elif not CS.button_pressed(ButtonType.cancel):
-      follow_inc_button = CS.button_pressed(ButtonType.followInc)
-      follow_dec_button = CS.button_pressed(ButtonType.followDec)
-
-      if CC.jvePilotState.carControl.autoFollow:
-        follow_inc_button = CS.button_pressed(ButtonType.followInc, False)
-        follow_dec_button = CS.button_pressed(ButtonType.followDec, False)
-        if (follow_inc_button and follow_inc_button.pressedFrames < 50) or \
-           (follow_dec_button and follow_dec_button.pressedFrames < 50):
-          CC.jvePilotState.carControl.autoFollow = False
-      elif (follow_inc_button and follow_inc_button.pressedFrames >= 50) or \
-           (follow_dec_button and follow_dec_button.pressedFrames >= 50):
-        CC.jvePilotState.carControl.autoFollow = True
-
       if enabled and not CS.out.brakePressed:
         button_counter_offset = [1, 1, 0, None][self.button_frame % 4]
         if button_counter_offset is not None:

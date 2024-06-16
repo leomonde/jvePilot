@@ -166,13 +166,10 @@ class Controls:
     self.reverse_acc_button_change = self.params.get_bool('jvePilot.settings.reverseAccSpeedChange')
     self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
     self.device_offset = float( self.params.get('jvePilot.settings.deviceOffset'))
-    self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
     self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
+    self.auto_follow = self.params.get_bool('jvePilot.settings.autoFollow')
 
     self.jvePilotState = car.JvePilotState.new_message()
-    self.jvePilotState.carControl.autoFollow = self.params.get_bool('jvePilot.settings.autoFollow')
-    self.jvePilotState.carControl.accEco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
-    self.ui_notify()
 
     if not sounds_available:
       self.events.add(EventName.soundsUnavailable, static=True)
@@ -452,14 +449,15 @@ class Controls:
       self.params.put_nonblocking("jvePilot.carState.accEco", str(self.sm['jvePilotUIState'].accEco))
 
     self.jvePilotState.carControl.accEco = self.acc_eco
+    self.jvePilotState.carControl.autoFollow = self.auto_follow
 
     return CS
 
   def ui_notify(self):
     msg = messaging.new_message('jvePilotUIState')
     msg.jvePilotUIState = self.sm['jvePilotUIState']
-    msg.jvePilotUIState.autoFollow = self.jvePilotState.carControl.autoFollow
-    msg.jvePilotUIState.accEco = self.jvePilotState.carControl.accEco
+    msg.jvePilotUIState.accEco = self.acc_eco
+    msg.jvePilotUIState.autoFollow = self.auto_follow
     self.pm.send('jvePilotState', msg)
 
   def state_transition(self, CS):
@@ -705,7 +703,28 @@ class Controls:
         self.personality = (self.personality - 1) % 3
         self.params.put_nonblocking('LongitudinalPersonality', str(self.personality))
 
+    # autoFollow
+    if self.auto_follow:
+      follow_inc_button = self.button_pressed(CS, ButtonType.followInc, False)
+      follow_dec_button = self.button_pressed(CS, ButtonType.followDec, False)
+      if (follow_inc_button and follow_inc_button.pressedFrames < 50) or \
+        (follow_dec_button and follow_dec_button.pressedFrames < 50):
+        self.auto_follow = False
+    else:
+      follow_inc_button = self.button_pressed(CS, ButtonType.followInc)
+      follow_dec_button = self.button_pressed(CS, ButtonType.followDec)
+      if (follow_inc_button and follow_inc_button.pressedFrames >= 50) or \
+        (follow_dec_button and follow_dec_button.pressedFrames >= 50):
+        self.auto_follow = True
+
     return CC, lac_log
+
+  def button_pressed(self, CS, button_type, pressed=True):
+    for b in CS.buttonEvents:
+      if b.type == button_type:
+        if b.pressed == pressed:
+          return b
+        break
 
   def publish_logs(self, CS, start_time, CC, lac_log):
     """Send actuators and hud commands to the car, send controlsstate and MPC logging"""
@@ -891,7 +910,6 @@ class Controls:
       self.personality = self.read_personality_param()
       self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
       self.device_offset = float(self.params.get('jvePilot.settings.deviceOffset'))
-      self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
       self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
       if self.CP.notCar:
         self.joystick_mode = self.params.get_bool("JoystickDebugMode")
