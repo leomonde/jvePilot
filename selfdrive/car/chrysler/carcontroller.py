@@ -41,7 +41,7 @@ class CarController(CarControllerBase):
     self.round_to_unit = CV.MS_TO_KPH if self.settingsParams.get_bool("IsMetric") else CV.MS_TO_MPH
     self.steerNoMinimum = self.settingsParams.get_bool("jvePilot.settings.steer.noMinimum")
     self.auto_enable_acc = self.settingsParams.get_bool("jvePilot.settings.autoEnableAcc")
-    self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
+    self.lkas_button_light = self.settingsParams.get_bool("jvePilot.settings.lkasButtonLight")
 
     self.autoFollowDistanceLock = None
     self.button_frame = 0
