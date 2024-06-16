@@ -70,7 +70,7 @@ class CarController(CarControllerBase):
       self.lkas_button_light = not self.lkas_button_light
       self.settingsParams.put_nonblocking("jvePilot.settings.lkasButtonLight", "1" if self.lkas_button_light else "0")
     if self.frame % 10 == 0:
-      lkas_disabled = CC.jvePilotState.carControl.lkasButtonLight or CS.out.steerFaultPermanent
+      lkas_disabled = self.lkas_button_light or CS.out.steerFaultPermanent
       new_msg = chryslercan.create_lkas_heartbit(self.packer, lkas_disabled, CS.lkasHeartbit)
       can_sends.append(new_msg)
     self.wheel_button_control(CC, CS, can_sends, CC.enabled, das_bus, CC.cruiseControl.cancel, CC.cruiseControl.resume)
