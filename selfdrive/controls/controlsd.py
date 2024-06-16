@@ -167,12 +167,12 @@ class Controls:
     self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
     self.device_offset = float( self.params.get('jvePilot.settings.deviceOffset'))
     self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
+    self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
+
     self.jvePilotState = car.JvePilotState.new_message()
     self.jvePilotState.carControl.autoFollow = self.params.get_bool('jvePilot.settings.autoFollow')
-    self.jvePilotState.carControl.lkasButtonLight = self.params.get_bool('jvePilot.settings.lkasButtonLight')
     self.jvePilotState.carControl.accEco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
     self.ui_notify()
-
 
     if not sounds_available:
       self.events.add(EventName.soundsUnavailable, static=True)
