@@ -73,15 +73,20 @@ void OnroadWindow::updateState(const UIState &s) {
 }
 
 void OnroadWindow::mousePressEvent(QMouseEvent* e) {
-#ifdef ENABLE_MAPS
-  if (map != nullptr) {
-    bool sidebarVisible = geometry().x() > 0;
-    bool show_map = !sidebarVisible;
-    map->setVisible(show_map && !map->isVisible());
+  if (uiState()->scene.accEco_btn.contains(e->x(), e->y())) {
+    uiState()->scene.accEco = uiState()->scene.accEco == 2 ? 0 : uiState()->scene.accEco + 1;
+    notify_state();
+  } else {
+  #ifdef ENABLE_MAPS
+    if (map != nullptr) {
+      bool sidebarVisible = geometry().x() > 0;
+      bool show_map = !sidebarVisible;
+      map->setVisible(show_map && !map->isVisible());
+    }
+  #endif
+    // propagation event to parent(HomeWindow)
+    QWidget::mousePressEvent(e);
   }
-#endif
-  // propagation event to parent(HomeWindow)
-  QWidget::mousePressEvent(e);
 }
 
 void OnroadWindow::createMapWidget() {

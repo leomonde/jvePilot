@@ -97,10 +97,7 @@ void HomeWindow::showDriverView(bool show) {
 
 void HomeWindow::mousePressEvent(QMouseEvent* e) {
   // Handle sidebar collapsing
-  if (uiState()->scene.accEco_btn.contains(e->x(), e->y())) {
-    uiState()->scene.accEco = uiState()->scene.accEco == 2 ? 0 : uiState()->scene.accEco + 1;
-    notify_state();
-  } else if ((onroad->isVisible() || body->isVisible()) && (!sidebar->isVisible() || e->x() > sidebar->width())) {
+  if ((onroad->isVisible() || body->isVisible()) && (!sidebar->isVisible() || e->x() > sidebar->width())) {
     sidebar->setVisible(!sidebar->isVisible() && !onroad->isMapVisible());
   }
 }
