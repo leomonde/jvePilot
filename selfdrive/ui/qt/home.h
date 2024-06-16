@@ -70,6 +70,5 @@ private:
   QStackedLayout *slayout;
 
 private slots:
-  void notify_state();
   void updateState(const UIState &s);
 };

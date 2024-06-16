@@ -89,6 +89,14 @@ void OnroadWindow::mousePressEvent(QMouseEvent* e) {
   }
 }
 
+void OnroadWindow::notify_state() {
+  MessageBuilder msg;
+  auto state = msg.initEvent().initJvePilotUIState();
+  state.setAutoFollow(uiState()->scene.autoFollowEnabled);
+  state.setAccEco(uiState()->scene.accEco);
+  uiState()->pm->send("jvePilotUIState", msg);
+}
+
 void OnroadWindow::createMapWidget() {
 #ifdef ENABLE_MAPS
   auto m = new MapPanel(get_mapbox_settings());

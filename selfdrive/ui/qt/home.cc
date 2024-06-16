@@ -57,14 +57,6 @@ void HomeWindow::showMapPanel(bool show) {
   onroad->showMapPanel(show);
 }
 
-void HomeWindow::notify_state() {
-  MessageBuilder msg;
-  auto state = msg.initEvent().initJvePilotUIState();
-  state.setAutoFollow(uiState()->scene.autoFollowEnabled);
-  state.setAccEco(uiState()->scene.accEco);
-  uiState()->pm->send("jvePilotUIState", msg);
-}
-
 void HomeWindow::updateState(const UIState &s) {
   const SubMaster &sm = *(s.sm);
 

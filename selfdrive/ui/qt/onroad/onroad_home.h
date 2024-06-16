@@ -25,6 +25,7 @@ private:
   QHBoxLayout* split;
 
 private slots:
+  void notify_state();
   void offroadTransition(bool offroad);
   void primeChanged(bool prime);
   void updateState(const UIState &s);
