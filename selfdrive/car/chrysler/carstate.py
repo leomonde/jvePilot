@@ -36,10 +36,18 @@ class CarState(CarStateBase):
     else:
       self.shifter_values = can_define.dv["GEAR"]["PRNDL"]
 
+    self.prev_distance_button = 0
+    self.distance_button = 0
+
     self.lkasHeartbit = None
 
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()
+
+    button_events = []
+    for buttonType in CHECK_BUTTONS:
+      self.check_button(button_events, buttonType, bool(cp.vl[CHECK_BUTTONS[buttonType][0]][CHECK_BUTTONS[buttonType][1]]))
+    ret.buttonEvents = button_events
 
     # lock info
     ret.doorOpen = any([cp.vl["BCM_1"]["DOOR_OPEN_FL"],
@@ -128,11 +136,6 @@ class CarState(CarStateBase):
 
     ret.jvePilotCarState.accFollowDistance = int(min(3, max(0, cp.vl["DAS_4"]['ACC_DISTANCE_CONFIG_2'])))
 
-    button_events = []
-    for buttonType in CHECK_BUTTONS:
-      self.check_button(button_events, buttonType, bool(cp.vl[CHECK_BUTTONS[buttonType][0]][CHECK_BUTTONS[buttonType][1]]))
-    ret.buttonEvents = button_events
-
     return ret
 
   def check_button(self, button_events, button_type, pressed):
@@ -145,15 +148,9 @@ class CarState(CarStateBase):
         break
 
     if pressed or pressed_changed:
-      be = car.CarState.ButtonEvent.new_message()
-      be.type = button_type
-      be.pressed = pressed
-      be.pressedFrames = pressed_frames
-
       if not pressed_changed:
-        be.pressedFrames += 1
-
-      button_events.append(be)
+        pressed_frames += 1
+      button_events.append(car.CarState.ButtonEvent(pressed=pressed, type=button_type, pressedFrames=pressed_frames))
 
   def button_pressed(self, button_type, pressed=True):
     for b in self.out.buttonEvents:
