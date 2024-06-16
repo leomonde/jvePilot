@@ -170,6 +170,7 @@ class Controls:
     self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
     self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
     self.auto_follow = self.params.get_bool('jvePilot.settings.autoFollow')
+    self.notify_ui = False
 
     self.jvePilotState = car.JvePilotState.new_message()
 
@@ -445,10 +446,10 @@ class Controls:
            if ps.safetyModel not in IGNORED_SAFETY_MODES):
       self.mismatch_counter += 1
 
-    if self.sm.frame % 25 == 0:
+    if self.notify_ui or self.sm.frame % 25:
+      self.notify_ui = False
       self.ui_notify()
-
-    if self.sm.updated['jvePilotUIState']:
+    elif self.sm.updated['jvePilotUIState']:
       self.params.put_nonblocking("jvePilot.carState.accEco", str(self.sm['jvePilotUIState'].accEco))
 
     self.jvePilotState.carControl.accEco = self.acc_eco
@@ -713,12 +714,14 @@ class Controls:
       if (follow_inc_button and follow_inc_button.pressedFrames < 50) or \
         (follow_dec_button and follow_dec_button.pressedFrames < 50):
         self.auto_follow = False
+        self.notify_ui = True
     else:
       follow_inc_button = button_pressed(CS, ButtonType.followInc)
       follow_dec_button = button_pressed(CS, ButtonType.followDec)
       if (follow_inc_button and follow_inc_button.pressedFrames >= 50) or \
         (follow_dec_button and follow_dec_button.pressedFrames >= 50):
         self.auto_follow = True
+        self.notify_ui = True
 
     return CC, lac_log
 
