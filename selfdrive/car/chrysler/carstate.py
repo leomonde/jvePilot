@@ -40,6 +40,7 @@ class CarState(CarStateBase):
     self.distance_button = 0
 
     self.lkasHeartbit = None
+    self.lkas_button_light = self.settingsParams.get_bool("jvePilot.settings.lkasButtonLight")
 
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()

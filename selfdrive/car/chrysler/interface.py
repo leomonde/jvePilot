@@ -98,7 +98,7 @@ class CarInterface(CarInterfaceBase):
     elif ret.vEgo > (self.CP.minSteerSpeed + 1.):
       self.low_speed_alert = False
 
-    if c.jvePilotState.carControl.lkasButtonLight:
+    if self.CS.lkas_button_light:
       events.add(car.CarEvent.EventName.lkasUserDisabled)
     elif self.low_speed_alert:
       events.add(car.CarEvent.EventName.belowSteerSpeed)
