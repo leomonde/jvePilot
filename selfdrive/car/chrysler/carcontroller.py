@@ -41,6 +41,7 @@ class CarController(CarControllerBase):
     self.round_to_unit = CV.MS_TO_KPH if self.settingsParams.get_bool("IsMetric") else CV.MS_TO_MPH
     self.steerNoMinimum = self.settingsParams.get_bool("jvePilot.settings.steer.noMinimum")
     self.auto_enable_acc = self.settingsParams.get_bool("jvePilot.settings.autoEnableAcc")
+    self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
 
     self.autoFollowDistanceLock = None
     self.button_frame = 0
@@ -66,8 +67,8 @@ class CarController(CarControllerBase):
 
     # jvePilot
     if CS.button_pressed(ButtonType.lkasToggle, False):
-      self.settingsParams.put_nonblocking("jvePilot.settings.lkasButtonLight",
-                                          "1" if CC.jvePilotState.carControl.lkasButtonLight else "0")
+      self.lkas_button_light = not self.lkas_button_light
+      self.settingsParams.put_nonblocking("jvePilot.settings.lkasButtonLight", "1" if self.lkas_button_light else "0")
     if self.frame % 10 == 0:
       lkas_disabled = CC.jvePilotState.carControl.lkasButtonLight or CS.out.steerFaultPermanent
       new_msg = chryslercan.create_lkas_heartbit(self.packer, lkas_disabled, CS.lkasHeartbit)

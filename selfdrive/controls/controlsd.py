@@ -452,7 +452,6 @@ class Controls:
       self.params.put_nonblocking("jvePilot.carState.accEco", str(self.sm['jvePilotUIState'].accEco))
 
     self.jvePilotState.carControl.accEco = self.acc_eco
-    self.jvePilotState.carControl.lkasButtonLight = self.lkas_button_light
 
     return CS
 
@@ -590,7 +589,7 @@ class Controls:
     CC = car.CarControl.new_message()
     CC.enabled = self.enabled
 
-    CC.jvePilotState.carState = self.CS_prev.jvePilotCarState
+    CC.jvePilotState.carState = CS.jvePilotCarState
     CC.jvePilotState.carControl = self.jvePilotState.carControl
 
     # Check which actuators can be enabled
