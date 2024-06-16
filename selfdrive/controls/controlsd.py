@@ -591,7 +591,7 @@ class Controls:
     CC = car.CarControl.new_message()
     CC.enabled = self.enabled
 
-    CC.jvePilotState.carState = CS.jvePilotCarState
+    CC.jvePilotState.carState = self.CS_prev.jvePilotCarState
     CC.jvePilotState.carControl = self.jvePilotState.carControl
 
     # Check which actuators can be enabled
