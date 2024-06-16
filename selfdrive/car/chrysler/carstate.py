@@ -6,6 +6,7 @@ from openpilot.selfdrive.car.interfaces import CarStateBase
 from openpilot.selfdrive.car.chrysler.values import DBC, STEER_THRESHOLD, RAM_CARS
 
 import numpy as np
+from common.params import Params
 
 ButtonType = car.CarState.ButtonEvent.Type
 
@@ -39,6 +40,7 @@ class CarState(CarStateBase):
     self.prev_distance_button = 0
     self.distance_button = 0
 
+    self.settingsParams = Params()
     self.lkasHeartbit = None
     self.lkas_button_light = self.settingsParams.get_bool("jvePilot.settings.lkasButtonLight")
 
