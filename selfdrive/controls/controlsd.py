@@ -449,8 +449,10 @@ class Controls:
     if self.notify_ui or self.sm.frame % 25:
       self.notify_ui = False
       self.ui_notify()
-    elif self.sm.updated['jvePilotUIState']:
-      self.params.put_nonblocking("jvePilot.carState.accEco", str(self.sm['jvePilotUIState'].accEco))
+
+    if self.sm.updated['jvePilotUIState']:
+      self.acc_eco = self.sm['jvePilotUIState'].accEco
+      self.params.put_nonblocking("jvePilot.carState.accEco", str(self.acc_eco))
 
     self.jvePilotState.carControl.accEco = self.acc_eco
     self.jvePilotState.carControl.autoFollow = self.auto_follow
@@ -910,7 +912,6 @@ class Controls:
       self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
       self.device_offset = float(self.params.get('jvePilot.settings.deviceOffset'))
       self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
-      self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
       if self.CP.notCar:
         self.joystick_mode = self.params.get_bool("JoystickDebugMode")
       time.sleep(0.1)
