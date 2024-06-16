@@ -6,9 +6,8 @@ $Cxx.namespace("cereal");
 # ******* events causing controls state machine transition *******
 
 struct JvePilotState {
-  notifyUi @0 :Bool;
-  carState @1 :JvePilotState.CarState;
-  carControl @2 :JvePilotState.CarControl;
+  carState @0 :JvePilotState.CarState;
+  carControl @1 :JvePilotState.CarControl;
 
   struct CarState {
     accFollowDistance @0 :UInt8;

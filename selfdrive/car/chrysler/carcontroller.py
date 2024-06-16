@@ -66,10 +66,8 @@ class CarController(CarControllerBase):
 
     # jvePilot
     if CS.button_pressed(ButtonType.lkasToggle, False):
-      CC.jvePilotState.carControl.lkasButtonLight = not CC.jvePilotState.carControl.lkasButtonLight
       self.settingsParams.put_nonblocking("jvePilot.settings.lkasButtonLight",
                                           "1" if CC.jvePilotState.carControl.lkasButtonLight else "0")
-      CC.jvePilotState.notifyUi = True
     if self.frame % 10 == 0:
       lkas_disabled = CC.jvePilotState.carControl.lkasButtonLight or CS.out.steerFaultPermanent
       new_msg = chryslercan.create_lkas_heartbit(self.packer, lkas_disabled, CS.lkasHeartbit)
@@ -159,11 +157,9 @@ class CarController(CarControllerBase):
         if (follow_inc_button and follow_inc_button.pressedFrames < 50) or \
            (follow_dec_button and follow_dec_button.pressedFrames < 50):
           CC.jvePilotState.carControl.autoFollow = False
-          CC.jvePilotState.notifyUi = True
       elif (follow_inc_button and follow_inc_button.pressedFrames >= 50) or \
            (follow_dec_button and follow_dec_button.pressedFrames >= 50):
         CC.jvePilotState.carControl.autoFollow = True
-        CC.jvePilotState.notifyUi = True
 
       if enabled and not CS.out.brakePressed:
         button_counter_offset = [1, 1, 0, None][self.button_frame % 4]

@@ -93,7 +93,6 @@ void OnroadWindow::mousePressEvent(QMouseEvent* e) {
 void OnroadWindow::notify_state() {
   MessageBuilder msg;
   auto state = msg.initEvent().initJvePilotUIState();
-  state.setAutoFollow(uiState()->scene.autoFollowEnabled);
   state.setAccEco(uiState()->scene.accEco);
   uiState()->pm->send("jvePilotUIState", msg);
 }

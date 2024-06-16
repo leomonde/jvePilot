@@ -166,6 +166,7 @@ class Controls:
     self.reverse_acc_button_change = self.params.get_bool('jvePilot.settings.reverseAccSpeedChange')
     self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
     self.device_offset = float( self.params.get('jvePilot.settings.deviceOffset'))
+    self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
     self.jvePilotState = car.JvePilotState.new_message()
     self.jvePilotState.carControl.autoFollow = self.params.get_bool('jvePilot.settings.autoFollow')
     self.jvePilotState.carControl.lkasButtonLight = self.params.get_bool('jvePilot.settings.lkasButtonLight')
@@ -445,23 +446,21 @@ class Controls:
            if ps.safetyModel not in IGNORED_SAFETY_MODES):
       self.mismatch_counter += 1
 
-    if self.jvePilotState.notifyUi or self.sm.frame == 25:
+    if self.sm.frame == 25:
       self.ui_notify()
     elif self.sm.updated['jvePilotUIState']:
-      self.jvePilotState.carControl.autoFollow = self.sm['jvePilotUIState'].autoFollow
-      self.jvePilotState.carControl.accEco = self.sm['jvePilotUIState'].accEco
       self.params.put_nonblocking("jvePilot.carState.accEco", str(self.sm['jvePilotUIState'].accEco))
+
+    self.jvePilotState.carControl.accEco = self.acc_eco
+    self.jvePilotState.carControl.lkasButtonLight = self.lkas_button_light
 
     return CS
 
   def ui_notify(self):
-    self.jvePilotState.notifyUi = False
-
     msg = messaging.new_message('jvePilotUIState')
     msg.jvePilotUIState = self.sm['jvePilotUIState']
     msg.jvePilotUIState.autoFollow = self.jvePilotState.carControl.autoFollow
     msg.jvePilotUIState.accEco = self.jvePilotState.carControl.accEco
-    msg.jvePilotUIState.lkasButtonLight = self.jvePilotState.carControl.lkasButtonLight
     self.pm.send('jvePilotState', msg)
 
   def state_transition(self, CS):
@@ -604,7 +603,7 @@ class Controls:
     CC.latActive = (self.active or aolcActive) \
                    and not CS.steerFaultTemporary \
                    and not CS.steerFaultPermanent \
-                   and not CC.jvePilotState.carControl.lkasButtonLight \
+                   and not self.lkas_button_light \
                    and (not standstill or self.joystick_mode)
     CC.longActive = self.enabled and not self.events.contains(ET.OVERRIDE_LONGITUDINAL) and self.CP.openpilotLongitudinalControl
 
@@ -788,7 +787,6 @@ class Controls:
       else:
         self.steer_limited = abs(CC.actuators.steer - CO.actuatorsOutput.steer) > 1e-2
       self.jvePilotState.carControl = CC.jvePilotState.carControl
-      self.jvePilotState.notifyUi = CC.jvePilotState.notifyUi
 
     force_decel = (self.sm['driverMonitoringState'].awarenessStatus < 0.) or \
                   (self.state == State.softDisabling)
@@ -894,6 +892,8 @@ class Controls:
       self.personality = self.read_personality_param()
       self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
       self.device_offset = float(self.params.get('jvePilot.settings.deviceOffset'))
+      self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
+      self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
       if self.CP.notCar:
         self.joystick_mode = self.params.get_bool("JoystickDebugMode")
       time.sleep(0.1)
