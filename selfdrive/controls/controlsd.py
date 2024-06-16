@@ -167,6 +167,7 @@ class Controls:
     self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
     self.device_offset = float( self.params.get('jvePilot.settings.deviceOffset'))
     self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
+    self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
     self.auto_follow = self.params.get_bool('jvePilot.settings.autoFollow')
 
     self.jvePilotState = car.JvePilotState.new_message()
@@ -910,6 +911,7 @@ class Controls:
       self.personality = self.read_personality_param()
       self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
       self.device_offset = float(self.params.get('jvePilot.settings.deviceOffset'))
+      self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
       self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
       if self.CP.notCar:
         self.joystick_mode = self.params.get_bool("JoystickDebugMode")
