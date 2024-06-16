@@ -155,13 +155,6 @@ class CarState(CarStateBase):
         pressed_frames += 1
       button_events.append(car.CarState.ButtonEvent(pressed=pressed, type=button_type, pressedFrames=pressed_frames))
 
-  def button_pressed(self, button_type, pressed=True):
-    for b in self.out.buttonEvents:
-      if b.type == button_type:
-        if b.pressed == pressed:
-          return b
-        break
-
   @staticmethod
   def get_cruise_messages():
     messages = [
