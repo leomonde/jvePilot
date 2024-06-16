@@ -1,7 +1,7 @@
 import math
 from common.numpy_fast import clip
 from opendbc.can.packer import CANPacker
-from openpilot.selfdrive.car import apply_meas_steer_torque_limits
+from openpilot.selfdrive.car import apply_meas_steer_torque_limits, button_pressed
 from openpilot.selfdrive.car.chrysler import chryslercan
 from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags, DRIVE_PERSONALITY
 from openpilot.selfdrive.car.interfaces import CarControllerBase
@@ -65,7 +65,7 @@ class CarController(CarControllerBase):
     #   can_sends.append(chryslercan.create_cruise_buttons(self.packer, CS.button_counter + 1, das_bus, resume=True))
 
     # jvePilot
-    if CS.button_pressed(ButtonType.lkasToggle, False):
+    if button_pressed(CS.out, ButtonType.lkasToggle, False):
       CS.lkas_button_light = not CS.lkas_button_light
       self.settingsParams.put_nonblocking("jvePilot.settings.lkasButtonLight", "1" if CS.lkas_button_light else "0")
     if self.frame % 10 == 0:
@@ -147,7 +147,7 @@ class CarController(CarControllerBase):
     buttons_to_press = []
     if cancel:
       buttons_to_press = ['ACC_Cancel']
-    elif not CS.button_pressed(ButtonType.cancel):
+    elif not button_pressed(CS.out, ButtonType.cancel):
       if enabled and not CS.out.brakePressed:
         button_counter_offset = [1, 1, 0, None][self.button_frame % 4]
         if button_counter_offset is not None:

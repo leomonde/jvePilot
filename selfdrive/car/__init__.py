@@ -125,6 +125,12 @@ def apply_dist_to_meas_limits(val, val_last, val_meas,
 
   return float(val)
 
+def button_pressed(CS, button_type, pressed=True):
+  for b in CS.buttonEvents:
+    if b.type == button_type:
+      if b.pressed == pressed:
+        return b
+      break
 
 def apply_meas_steer_torque_limits(apply_torque, apply_torque_last, motor_torque, LIMITS):
   return int(round(apply_dist_to_meas_limits(apply_torque, apply_torque_last, motor_torque,

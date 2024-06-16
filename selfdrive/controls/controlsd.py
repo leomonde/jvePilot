@@ -18,7 +18,7 @@ from openpilot.common.params import Params
 from openpilot.common.realtime import config_realtime_process, Priority, Ratekeeper, DT_CTRL
 from openpilot.common.swaglog import cloudlog
 
-from openpilot.selfdrive.car.car_helpers import get_car_interface, get_startup_event
+from openpilot.selfdrive.car.car_helpers import get_car_interface, get_startup_event, button_pressed
 from openpilot.selfdrive.controls.lib.alertmanager import AlertManager, set_offroad_alert
 from openpilot.selfdrive.controls.lib.drive_helpers import VCruiseHelper, clip_curvature
 from openpilot.selfdrive.controls.lib.events import Events, ET, EVENTS
@@ -444,9 +444,10 @@ class Controls:
            if ps.safetyModel not in IGNORED_SAFETY_MODES):
       self.mismatch_counter += 1
 
-    if self.sm.frame == 25:
+    if self.sm.frame % 25 == 0:
       self.ui_notify()
-    elif self.sm.updated['jvePilotUIState']:
+
+    if self.sm.updated['jvePilotUIState']:
       self.params.put_nonblocking("jvePilot.carState.accEco", str(self.sm['jvePilotUIState'].accEco))
 
     self.jvePilotState.carControl.accEco = self.acc_eco
@@ -706,26 +707,19 @@ class Controls:
 
     # autoFollow
     if self.auto_follow:
-      follow_inc_button = self.button_pressed(CS, ButtonType.followInc, False)
-      follow_dec_button = self.button_pressed(CS, ButtonType.followDec, False)
+      follow_inc_button = button_pressed(CS, ButtonType.followInc, False)
+      follow_dec_button = button_pressed(CS, ButtonType.followDec, False)
       if (follow_inc_button and follow_inc_button.pressedFrames < 50) or \
         (follow_dec_button and follow_dec_button.pressedFrames < 50):
         self.auto_follow = False
     else:
-      follow_inc_button = self.button_pressed(CS, ButtonType.followInc)
-      follow_dec_button = self.button_pressed(CS, ButtonType.followDec)
+      follow_inc_button = button_pressed(CS, ButtonType.followInc)
+      follow_dec_button = button_pressed(CS, ButtonType.followDec)
       if (follow_inc_button and follow_inc_button.pressedFrames >= 50) or \
         (follow_dec_button and follow_dec_button.pressedFrames >= 50):
         self.auto_follow = True
 
     return CC, lac_log
-
-  def button_pressed(self, CS, button_type, pressed=True):
-    for b in CS.buttonEvents:
-      if b.type == button_type:
-        if b.pressed == pressed:
-          return b
-        break
 
   def publish_logs(self, CS, start_time, CC, lac_log):
     """Send actuators and hud commands to the car, send controlsstate and MPC logging"""
