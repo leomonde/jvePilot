@@ -10,8 +10,8 @@ from openpilot.common.basedir import BASEDIR
 from openpilot.common.swaglog import cloudlog
 from openpilot.common.git import get_commit, get_origin, get_branch, get_short_branch, get_commit_date
 
-RELEASE_BRANCHES = ['release3-staging', 'release3', 'nightly']
-TESTED_BRANCHES = RELEASE_BRANCHES + ['devel', 'devel-staging', 'jvePilot-release', 'origin/jvePilot-release']
+RELEASE_BRANCHES = ['jvePilot-release', 'release3-staging', 'release3', 'nightly']
+TESTED_BRANCHES = RELEASE_BRANCHES + ['jvePilot-beta', 'devel', 'devel-staging']
 
 BUILD_METADATA_FILENAME = "build.json"
 
