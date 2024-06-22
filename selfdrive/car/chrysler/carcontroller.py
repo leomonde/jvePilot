@@ -120,13 +120,14 @@ class CarController(CarControllerBase):
 
       can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
 
-    # auto set profile
-    follow_distance = CC.jvePilotState.carState.accFollowDistance or 0
-    acc_eco = CC.jvePilotState.carControl.accEco or 0
-    personality = DRIVE_PERSONALITY[acc_eco][follow_distance]
-    if personality != self.last_personality:
-      self.last_personality = personality
-      self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
+    if CC.enabled:
+      # auto set profile
+      follow_distance = CC.jvePilotState.carState.accFollowDistance or 0
+      acc_eco = CC.jvePilotState.carControl.accEco or 0
+      personality = DRIVE_PERSONALITY[acc_eco][follow_distance]
+      if personality != self.last_personality:
+        self.last_personality = personality
+        self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
 
     self.frame += 1
 
