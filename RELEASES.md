@@ -1,4 +1,4 @@
-Version jvePilot-0.9.6(v3.16.1)
+Version jvePilot-0.9.7(v3.16.1)
 ========================
 Visit http://bit.ly/jvereadme for more information
 * LKAS button now toggles use of LKAS instead of toggling experimental mode
