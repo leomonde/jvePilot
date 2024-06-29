@@ -44,6 +44,18 @@ class CarState(CarStateBase):
     self.lkasHeartbit = None
     self.lkas_button_light = self.settingsParams.get_bool("jvePilot.settings.lkasButtonLight")
 
+    # long control
+    self.longControl = False
+    self.cachedParams = CachedParams()
+    self.das_3 = None
+    self.longEnabled = False
+    self.longControl = False
+    self.gasRpm = None
+    self.allowLong = True # CP.carFingerprint in (CAR.JEEP_CHEROKEE, CAR.JEEP_CHEROKEE_2019)
+    self.torqMin = None
+    self.torqMax = None
+    self.currentGear = None
+
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()
 
@@ -98,12 +110,24 @@ class CarState(CarStateBase):
     # cruise state
     cp_cruise = cp_cam if self.CP.carFingerprint in RAM_CARS else cp
 
-    ret.cruiseState.available = cp_cruise.vl["DAS_3"]["ACC_AVAILABLE"] == 1
-    ret.cruiseState.enabled = cp_cruise.vl["DAS_3"]["ACC_ACTIVE"] == 1
-    ret.cruiseState.speed = cp_cruise.vl["DAS_4"]["ACC_SET_SPEED_KPH"] * CV.KPH_TO_MS
-    ret.cruiseState.nonAdaptive = cp_cruise.vl["DAS_4"]["ACC_STATE"] in (1, 2)  # 1 NormalCCOn and 2 NormalCCSet
-    ret.cruiseState.standstill = cp_cruise.vl["DAS_3"]["ACC_STANDSTILL"] == 1
-    ret.accFaulted = cp_cruise.vl["DAS_3"]["ACC_FAULTED"] != 0
+    self.longControl = (self.CP.experimentalLongitudinalAvailable and cp.vl["DAS_4"]["ACC_STATE"] == 0
+                        and self.cachedParams.get_bool('ExperimentalLongitudinalEnabled', 1000))
+    if self.longControl:
+      ret.jvePilotCarState.longControl = True
+      ret.cruiseState.enabled = self.longEnabled
+      ret.cruiseState.available = True
+      ret.cruiseState.nonAdaptive = False
+      ret.cruiseState.standstill = False
+      ret.accFaulted = False
+      self.torqMin = cp.vl["DAS_3"]["ENGINE_TORQUE_REQUEST"]
+      self.torqMax = cp.vl["ECM_TRQ"]["ENGINE_TORQ_MAX"]
+      self.currentGear = cp.vl['TCM_A7']["CurrentGear"]
+      self.gasRpm = cp.vl["ECM_1"]["ENGINE_RPM"]
+      self.das_3 = cp.vl['DAS_3']
+    else:
+      ret.jvePilotCarState.longControl = False
+      self.longEnabled = False
+
     self.lkasHeartbit = cp_cam.vl["LKAS_HEARTBIT"]
 
     if self.CP.carFingerprint in RAM_CARS:
@@ -179,6 +203,10 @@ class CarState(CarStateBase):
       ("ESP_8", 50),
       ("ECM_2", 50),
       ("TRACTION_BUTTON", 1),
+
+      ("ECM_1", 50),
+      ("ECM_TRQ", 50),
+      ("TCM_A7", 50),
     ]
 
     if CP.enableBsm:
@@ -192,7 +220,6 @@ class CarState(CarStateBase):
     else:
       messages += [
         ("GEAR", 50),
-        ("SPEED_1", 100),
       ]
       messages += CarState.get_cruise_messages()
 

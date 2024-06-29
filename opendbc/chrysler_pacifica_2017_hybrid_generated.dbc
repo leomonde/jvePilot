@@ -160,6 +160,11 @@ BO_ 678 DAS_6: 8 XXX
  SG_ AUTO_HIGH_BEAM_ON : 47|1@1+ (1,0) [0|0] "" XXX
  SG_ LKAS_DISABLED : 56|1@1+ (1,0) [0|0] "" XXX
 
+BO_ 680 TCM_A7: 8 ECM
+ SG_ CurrentGear : 16|4@1+ (1,0) [0|0] ""  ECM,DASM,CBC
+ SG_ CurrentGearForDisplay : 20|4@1+ (1,0) [0|0] ""  ECM,IC
+ SG_ TargetGear : 24|4@1+ (1,0) [0|0] ""  ECM,DASM,CBC
+
 BO_ 720 BSM_1: 6 XXX
  SG_ RIGHT_STATUS : 5|1@0+ (1,0) [0|1] "" XXX
  SG_ LEFT_STATUS : 2|1@0+ (1,0) [0|1] "" XXX
