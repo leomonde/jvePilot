@@ -751,8 +751,6 @@ class Controls:
     # target the future speed
     v_max_speed = float(self.v_cruise_helper.v_cruise_kph * CV.KPH_TO_MS)
     CC.jvePilotState.carControl.vMaxCruise = v_max_speed
-    v_target_future = speeds[-1] if len(speeds) else 0
-    CC.jvePilotState.carControl.vTargetFuture = min(v_max_speed, v_target_future)
 
     hudControl = CC.hudControl
     hudControl.setSpeed = float(self.v_cruise_helper.v_cruise_cluster_kph * CV.KPH_TO_MS)

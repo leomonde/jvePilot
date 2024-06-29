@@ -15,11 +15,10 @@ struct JvePilotState {
   }
 
   struct CarControl {
-    vTargetFuture @0 :Float32;
-    autoFollow @1 :Bool;
-    accEco @2 :UInt8;
-    vMaxCruise @3 :Float32;
-    aolcAvailable @4 :Bool;
+    autoFollow @0 :Bool;
+    accEco @1 :UInt8;
+    vMaxCruise @2 :Float32;
+    aolcAvailable @3 :Bool;
   }
 }
 

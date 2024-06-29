@@ -10,7 +10,7 @@ from selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPE
 from common.conversions import Conversions as CV
 from common.cached_params import CachedParams
 from common.params import Params
-from cereal import car
+from cereal import car, messaging
 
 GearShifter = car.CarState.GearShifter
 ButtonType = car.CarState.ButtonEvent.Type
@@ -18,8 +18,7 @@ ButtonType = car.CarState.ButtonEvent.Type
 V_CRUISE_MIN_IMPERIAL_MS = V_CRUISE_MIN_IMPERIAL * CV.KPH_TO_MS
 V_CRUISE_MIN_MS = V_CRUISE_MIN * CV.KPH_TO_MS
 AUTO_FOLLOW_LOCK_MS = 3 * CV.MPH_TO_MS
-ACC_BRAKE_THRESHOLD = 4 * CV.MPH_TO_MS
-ACC_BRAKE_MAX = 10
+EXTEND_FUTURE_MAX = 10 * CV.MPH_TO_MS
 
 class CarController(CarControllerBase):
   def __init__(self, dbc_name, CP, VM):
@@ -35,6 +34,7 @@ class CarController(CarControllerBase):
     self.packer = CANPacker(dbc_name)
     self.params = CarControllerParams(CP)
 
+    self.sm = messaging.SubMaster(['longitudinalPlan'])
     self.settingsParams = Params()
     self.cachedParams = CachedParams()
     self.minAccSetting = V_CRUISE_MIN_MS if self.settingsParams.get_bool("IsMetric") else V_CRUISE_MIN_IMPERIAL_MS
@@ -177,20 +177,16 @@ class CarController(CarControllerBase):
     elif CC.jvePilotState.carControl.accEco == 2:
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel2', 1000)
 
-    experimental_mode = self.cachedParams.get_bool("ExperimentalMode", 1000)
-    if experimental_mode:
-      acc_boost = clip(CC.actuators.accel, 0, eco_limit * CV.MPH_TO_MS) if eco_limit else 0
+    self.sm.update(0)
+    if len(self.sm['longitudinalPlan'].speeds):
+      extendFuture = clip(min(self.sm['longitudinalPlan'].accels) * 2, -EXTEND_FUTURE_MAX, EXTEND_FUTURE_MAX)
+      targetFuture = self.sm['longitudinalPlan'].speeds[-1] + extendFuture
     else:
-      acc_boost = 0
+      targetFuture = 0
 
-    target = self.acc_hysteresis(CC.jvePilotState.carControl.vTargetFuture + acc_boost)
+    target = self.acc_hysteresis(targetFuture)
     if eco_limit:
       target = min(target, CS.out.vEgo + (eco_limit * CV.MPH_TO_MS))
-
-    # ACC Braking
-    diff = CS.out.vEgo - target
-    if diff > ACC_BRAKE_THRESHOLD and abs(target - CC.jvePilotState.carControl.vMaxCruise) > ACC_BRAKE_THRESHOLD:  # ignore change in max cruise speed
-      target -= min(diff, ACC_BRAKE_MAX)
 
     target = math.ceil(min(CC.jvePilotState.carControl.vMaxCruise, target) * self.round_to_unit)
     current = round(CS.out.cruiseState.speed * self.round_to_unit)
