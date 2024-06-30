@@ -163,10 +163,10 @@ class CarState(CarStateBase):
 
     brake = cp.vl["ESP_8"]["BRK_PRESSURE"]
     gas = cp.vl["ECM_2"]["ACCEL"]
-    if gas > 0:
-      ret.jvePilotCarState.pedalPressedAmount = float(np.interp(gas, PEDAL_GAS_PRESSED_XP, PEDAL_PRESSED_YP)) / 256
-    elif brake > 0:
+    if brake > 0:
       ret.jvePilotCarState.pedalPressedAmount = float(np.interp(brake / 16, PEDAL_BRAKE_PRESSED_XP, PEDAL_PRESSED_YP)) / -256
+    elif gas > 0:
+      ret.jvePilotCarState.pedalPressedAmount = float(np.interp(gas, PEDAL_GAS_PRESSED_XP, PEDAL_PRESSED_YP)) / 256
     else:
       ret.jvePilotCarState.pedalPressedAmount = 0
 
