@@ -7,6 +7,7 @@ from openpilot.selfdrive.car.chrysler.values import DBC, STEER_THRESHOLD, RAM_CA
 
 import numpy as np
 from common.params import Params
+from common.cached_params import CachedParams
 
 ButtonType = car.CarState.ButtonEvent.Type
 
@@ -54,7 +55,8 @@ class CarState(CarStateBase):
     self.allowLong = True # CP.carFingerprint in (CAR.JEEP_CHEROKEE, CAR.JEEP_CHEROKEE_2019)
     self.torqMin = None
     self.torqMax = None
-    self.currentGear = None
+    self.transmission_gear = None
+    self.engine_torque = None
 
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()
@@ -121,13 +123,20 @@ class CarState(CarStateBase):
       ret.accFaulted = False
       self.torqMin = cp.vl["DAS_3"]["ENGINE_TORQUE_REQUEST"]
       self.torqMax = cp.vl["ECM_TRQ"]["ENGINE_TORQ_MAX"]
-      self.currentGear = cp.vl['TCM_A7']["CurrentGear"]
+      self.transmission_gear = int(cp.vl['TCM_A7']["CurrentGear"])
       self.gasRpm = cp.vl["ECM_1"]["ENGINE_RPM"]
-      self.das_3 = cp.vl['DAS_3']
+      self.engine_torque = cp.vl["ECM_1"]["ENGINE_TORQUE"]
     else:
-      ret.jvePilotCarState.longControl = False
       self.longEnabled = False
+      ret.jvePilotCarState.longControl = False
+      ret.cruiseState.available = cp_cruise.vl["DAS_3"]["ACC_AVAILABLE"] == 1
+      ret.cruiseState.enabled = cp_cruise.vl["DAS_3"]["ACC_ACTIVE"] == 1
+      ret.cruiseState.speed = cp_cruise.vl["DAS_4"]["ACC_SET_SPEED_KPH"] * CV.KPH_TO_MS
+      ret.cruiseState.nonAdaptive = cp_cruise.vl["DAS_4"]["ACC_STATE"] in (1, 2)  # 1 NormalCCOn and 2 NormalCCSet
+      ret.cruiseState.standstill = cp_cruise.vl["DAS_3"]["ACC_STANDSTILL"] == 1
+      ret.accFaulted = cp_cruise.vl["DAS_3"]["ACC_FAULTED"] != 0
 
+    self.das_3 = cp.vl['DAS_3']
     self.lkasHeartbit = cp_cam.vl["LKAS_HEARTBIT"]
 
     if self.CP.carFingerprint in RAM_CARS:

@@ -6,7 +6,9 @@ from openpilot.selfdrive.car.chrysler import chryslercan
 from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags, DRIVE_PERSONALITY
 from openpilot.selfdrive.car.interfaces import CarControllerBase
 
-from selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
+from openpilot.selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
+from openpilot.selfdrive.car.chrysler.long_carcontroller_v1 import LongCarControllerV1
+from openpilot.selfdrive.car.chrysler.long_carcontroller_v2 import LongCarControllerV2
 from common.conversions import Conversions as CV
 from common.cached_params import CachedParams
 from common.params import Params
@@ -48,8 +50,11 @@ class CarController(CarControllerBase):
     self.last_aolc_ready = False
     self.last_personality = None
 
+    self.long_controller = LongCarControllerV2(self.CP, self.params, self.packer)
+
   def update(self, CC, CS, now_nanos):
     can_sends = []
+    self.sm.update(0)
 
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
@@ -135,6 +140,10 @@ class CarController(CarControllerBase):
     new_actuators.steer = self.apply_steer_last / self.params.STEER_MAX
     new_actuators.steerOutputCan = self.apply_steer_last
 
+    accel = self.long_controller.acc(self.sm['longitudinalPlan'], self.frame, CC, CS, can_sends)
+    if accel is not None:
+      new_actuators.accel = accel
+
     return new_actuators, can_sends
 
   def wheel_button_control(self, CC, CS, can_sends, enabled, das_bus, cancel, resume):
@@ -143,31 +152,32 @@ class CarController(CarControllerBase):
       return
     self.last_button_frame = button_counter
 
-    self.button_frame += 1
-    button_counter_offset = 1
-    buttons_to_press = []
-    if cancel:
-      buttons_to_press = ['ACC_Cancel']
-    elif not button_pressed(CS.out, ButtonType.cancel):
-      if enabled and not CS.out.brakePressed:
-        button_counter_offset = [1, 1, 0, None][self.button_frame % 4]
-        if button_counter_offset is not None:
-          if resume:
-            buttons_to_press = ["ACC_Resume"]
-          elif CS.out.cruiseState.enabled:  # Control ACC
-            buttons_to_press = [self.auto_follow_button(CC, CS), self.hybrid_acc_button(CC, CS)]
+    if not self.long_controller.button_control(CC, CS):
+      self.button_frame += 1
+      button_counter_offset = 1
+      buttons_to_press = []
+      if cancel:
+        buttons_to_press = ['ACC_Cancel']
+      elif not button_pressed(CS.out, ButtonType.cancel):
+        if enabled and not CS.out.brakePressed:
+          button_counter_offset = [1, 1, 0, None][self.button_frame % 4]
+          if button_counter_offset is not None:
+            if resume:
+              buttons_to_press = ["ACC_Resume"]
+            elif CS.out.cruiseState.enabled:  # Control ACC
+              buttons_to_press = [self.auto_follow_button(CC, CS), self.hybrid_acc_button(CC, CS)]
 
-    # ACC Auto enable
-    if self.auto_enable_acc and self.frame < 50:
-      if not CS.out.cruiseState.available:
-        buttons_to_press.append("ACC_OnOff")
-      else:
-        self.auto_enable_acc = False
+      # ACC Auto enable
+      if self.auto_enable_acc and self.frame < 50:
+        if not CS.out.cruiseState.available:
+          buttons_to_press.append("ACC_OnOff")
+        else:
+          self.auto_enable_acc = False
 
-    buttons_to_press = list(filter(None, buttons_to_press))
-    if buttons_to_press is not None and len(buttons_to_press) > 0:
-      new_msg = chryslercan.create_wheel_buttons_command(self.packer, das_bus, button_counter + button_counter_offset, buttons_to_press)
-      can_sends.append(new_msg)
+      buttons_to_press = list(filter(None, buttons_to_press))
+      if buttons_to_press is not None and len(buttons_to_press) > 0:
+        new_msg = chryslercan.create_wheel_buttons_command(self.packer, das_bus, button_counter + button_counter_offset, buttons_to_press)
+        can_sends.append(new_msg)
 
   def hybrid_acc_button(self, CC, CS):
     # Move the adaptive curse control to the target speed
@@ -177,7 +187,6 @@ class CarController(CarControllerBase):
     elif CC.jvePilotState.carControl.accEco == 2:
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel2', 1000)
 
-    self.sm.update(0)
     if len(self.sm['longitudinalPlan'].speeds):
       extendFuture = clip(min(self.sm['longitudinalPlan'].accels) * 2, -EXTEND_FUTURE_MAX, EXTEND_FUTURE_MAX)
       targetFuture = self.sm['longitudinalPlan'].speeds[-1] + extendFuture

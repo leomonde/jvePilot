@@ -106,6 +106,12 @@ class CarControllerParams:
       self.STEER_DELTA_DOWN = 3
       self.STEER_MAX = 261  # higher than this faults the EPS
 
+    self.ACC_CONTROL_STEP = 2  # 50Hz
+
+    self.ACCEL_MIN = -3.5
+    self.ACCEL_MAX = 2.0
+    self.INACTIVE_ACCEL = 4.0
+
 
 STEER_THRESHOLD = 120
 
