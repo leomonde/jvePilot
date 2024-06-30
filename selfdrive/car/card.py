@@ -84,7 +84,7 @@ class Car:
     self.events = Events()
 
     # card is driven by can recv, expected at 100Hz
-    self.rk = Ratekeeper(100, print_delay_threshold=None)
+    self.rk = Ratekeeper(500, print_delay_threshold=None)
 
   def state_update(self) -> car.CarState:
     """carState update loop, driven by can"""
