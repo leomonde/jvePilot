@@ -50,7 +50,7 @@ class CarController(CarControllerBase):
     self.last_aolc_ready = False
     self.last_personality = None
 
-    self.long_controller = LongCarControllerV2(self.CP, self.params, self.packer)
+    self.long_controller = LongCarControllerV1(self.CP, self.params, self.packer)
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
