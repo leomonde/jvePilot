@@ -155,7 +155,7 @@ class LongCarControllerV1(LongCarController):
 
     self.under_accel_frame_count = under_accel_frame_count
 
-    can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, vTarget, long_stopping, CS.out.standstill))
+    can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, vTarget))
 
     can_sends.append(acc_command(self.packer,
                                  True,
