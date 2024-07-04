@@ -42,11 +42,11 @@ def calc_engine_torque(accel, pitch, transmission_gear, drag_force):
   engine_torque = wheel_torque / FINAL_DRIVE_RATIOS[int(transmission_gear)-1]
   return engine_torque
 
-def create_acc_commands(packer, das_3, enabled, long_active, gas, brakes, starting, stopping):
+def create_acc_commands(packer, counter_offset, das_3, enabled, long_active, gas, brakes, brake_prep, starting, stopping):
   commands = []
 
   das_3_values = {
-    'COUNTER': (das_3['COUNTER'] + 1) % 0x10,
+    'COUNTER': (das_3['COUNTER'] + counter_offset) % 0x10,
     'ACC_AVAILABLE': 1,
     'ACC_ACTIVE': enabled,
     'ACC_DECEL_REQ': brakes < 0.0 if long_active else 0,
@@ -60,7 +60,7 @@ def create_acc_commands(packer, das_3, enabled, long_active, gas, brakes, starti
     'DISABLE_FUEL_SHUTOFF': 1,
     # TODO: does this have any impact on ACC braking responsiveness?
     # TODO: does this cause a fault if set for too long?
-    #'ACC_BRK_PREP': brakes < 0.5 if enabled else 0,
+    'ACC_BRK_PREP': brake_prep,
     # TODO: does this have any impact on ACC braking responsiveness?
     #'COLLISION_BRK_PREP': ?,
   }
@@ -82,8 +82,7 @@ class LongCarControllerV2(LongCarController):
     self.last_gas = 0
 
   def acc(self, longitudinalPlan, frame, CC, CS, can_sends):
-    if CS.das_3['COUNTER'] == self.last_das_3_counter:
-      return None
+    counter_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
     self.last_das_3_counter = CS.das_3['COUNTER']
 
     if not CC.enabled or not CS.longControl:
@@ -115,4 +114,14 @@ class LongCarControllerV2(LongCarController):
           gas = 0.0
           brakes = min(accel, 0)
 
-      can_sends.extend(create_acc_commands(self.packer, CS.das_3, CC.enabled, CC.longActive, gas, brakes, starting, stopping))
+      brake_prep = brakes < 0.0 and len(longitudinalPlan.accels) and longitudinalPlan.accels[0] - longitudinalPlan.accels[-1] > 1.0
+      can_sends.extend(create_acc_commands(self.packer,
+                                           2 if counter_changed else 3,
+                                           CS.das_3,
+                                           CC.enabled,
+                                           CC.longActive,
+                                           gas,
+                                           brakes,
+                                           brake_prep,
+                                           starting,
+                                           stopping))
