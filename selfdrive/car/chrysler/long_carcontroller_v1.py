@@ -157,7 +157,7 @@ class LongCarControllerV1(LongCarController):
     can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, vTarget))
 
     can_sends.append(acc_command(self.packer,
-                                 2 if counter_changed else 1,
+                                 2 if counter_changed else 3,
                                  go_req,
                                  torque,
                                  self.max_gear,
