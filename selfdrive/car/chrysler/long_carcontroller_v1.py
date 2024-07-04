@@ -30,11 +30,11 @@ TORQ_BRAKE_MAX = -0.1
 # braking
 BRAKE_CHANGE = 0.06
 
-def acc_command(packer, enabled, go, gas, max_gear, stop, brake, das_3):
+def acc_command(packer, counter_offset, go, gas, max_gear, stop, brake, das_3):
   values = das_3.copy()  # forward what we parsed
   values['ACC_AVAILABLE'] = 1
-  values['ACC_ACTIVE'] = enabled
-  values['COUNTER'] = (das_3['COUNTER'] + 1) % 0x10
+  values['ACC_ACTIVE'] = 1
+  values['COUNTER'] = (das_3['COUNTER'] + counter_offset) % 0x10
 
   if go is not None:
     values['ACC_GO'] = go
@@ -43,11 +43,11 @@ def acc_command(packer, enabled, go, gas, max_gear, stop, brake, das_3):
     values['ACC_STANDSTILL'] = stop
 
   if brake is not None:
-    values['ACC_DECEL_REQ'] = enabled
+    values['ACC_DECEL_REQ'] = 1
     values['ACC_DECEL'] = brake
 
   if gas is not None:
-    values['ENGINE_TORQUE_REQUEST_MAX'] = enabled
+    values['ENGINE_TORQUE_REQUEST_MAX'] = 1
     values['ENGINE_TORQUE_REQUEST'] = gas
 
   if max_gear is not None:
@@ -70,8 +70,7 @@ class LongCarControllerV1(LongCarController):
 
   # T = (mass x accel x velocity x 1000)/(.105 x Engine rpm)
   def acc(self, longitudinalPlan, frame, CC, CS, can_sends):
-    if CS.das_3['COUNTER'] == self.last_das_3_counter:
-      return None
+    counter_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
     self.last_das_3_counter = CS.das_3['COUNTER']
 
     if not CC.enabled or not CS.longControl:
@@ -158,7 +157,7 @@ class LongCarControllerV1(LongCarController):
     can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, vTarget))
 
     can_sends.append(acc_command(self.packer,
-                                 True,
+                                 2 if counter_changed else 1,
                                  go_req,
                                  torque,
                                  self.max_gear,
