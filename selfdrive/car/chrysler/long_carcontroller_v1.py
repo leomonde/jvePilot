@@ -30,7 +30,7 @@ TORQ_BRAKE_MAX = -0.1
 # braking
 BRAKE_CHANGE = 0.06
 
-def acc_command(packer, counter_offset, go, gas, max_gear, stop, brake, das_3):
+def acc_command(packer, counter_offset, go, gas, max_gear, stop, brake, brake_prep, das_3):
   values = das_3.copy()  # forward what we parsed
   values['ACC_AVAILABLE'] = 1
   values['ACC_ACTIVE'] = 1
@@ -45,6 +45,7 @@ def acc_command(packer, counter_offset, go, gas, max_gear, stop, brake, das_3):
   if brake is not None:
     values['ACC_DECEL_REQ'] = 1
     values['ACC_DECEL'] = brake
+    values['ACC_BRK_PREP'] = brake_prep
 
   if gas is not None:
     values['ENGINE_TORQUE_REQUEST_MAX'] = 1
@@ -156,6 +157,8 @@ class LongCarControllerV1(LongCarController):
 
     can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, vTarget))
 
+    brake_prep = brake is not None and len(longitudinalPlan.accels) and longitudinalPlan.accels[0] - longitudinalPlan.accels[-1] > 1.0
+
     can_sends.append(acc_command(self.packer,
                                  2 if counter_changed else 3,
                                  go_req,
@@ -163,6 +166,7 @@ class LongCarControllerV1(LongCarController):
                                  self.max_gear,
                                  stop_req and not fidget_stopped_brake_frame,
                                  brake,
+                                 brake_prep,
                                  CS.das_3))
 
     if brake is not None:
