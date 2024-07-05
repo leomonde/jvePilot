@@ -138,7 +138,7 @@ class LongCarControllerV3(LongCarController):
       can_use_engine_brake = not speed_to_far_off and vTarget > LOW_WINDOW
       engine_brake = can_use_engine_brake and TORQ_BRAKE_MAX < aTarget < 0 \
                      and self.torque(CC, CS, aTarget) + self.torq_adjust > CS.torqMin
-      let_off_gas = can_use_engine_brake and vTarget < CS.out.vEgo and aTarget > 0 > longitudinalPlan.accel[-1] if len(longitudinalPlan.accel) else 0
+      let_off_gas = can_use_engine_brake and vTarget < CS.out.vEgo and aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
 
       if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking and not let_off_gas):  # gas
         under_accel_frame_count = self.acc_gas(CC, CS, frame, aTarget, vTarget, under_accel_frame_count)
@@ -194,7 +194,7 @@ class LongCarControllerV3(LongCarController):
 
     self.under_accel_frame_count = under_accel_frame_count
 
-    can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, aTarget, vTarget))
+    can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, vTarget))
 
     brake_prep = brake is not None and len(longitudinalPlan.accels) and longitudinalPlan.accels[0] - longitudinalPlan.accels[-1] > 1.0
 
