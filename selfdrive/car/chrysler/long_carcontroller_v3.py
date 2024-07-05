@@ -137,7 +137,7 @@ class LongCarControllerV3(LongCarController):
       speed_to_far_off = abs(CS.out.vEgo - vTarget) > COAST_WINDOW
       can_use_engine_brake = not speed_to_far_off and vTarget > LOW_WINDOW
       engine_brake = can_use_engine_brake and TORQ_BRAKE_MAX < aTarget < 0 \
-                     and self.torque(CC, CS, aTarget) + self.torq_adjust > CS.torqMin
+                     and self.torque(CC, CS, aTarget, vTarget) + self.torq_adjust > CS.torqMin
       let_off_gas = can_use_engine_brake and vTarget < CS.out.vEgo and aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
 
       if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking and not let_off_gas):  # gas
@@ -216,18 +216,22 @@ class LongCarControllerV3(LongCarController):
     return 0
 
   @staticmethod
-  def torque(CC, CS, aTarget):
+  def torque(CC, CS, aTarget, vTarget):
     pitch = CC.orientationNED[1] if len(CC.orientationNED) > 1 else 0
     drag_force = calc_drag_force(CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
-    return calc_engine_torque(aTarget, pitch, CS.transmission_gear, drag_force)
+    force = (VEHICLE_MASS * aTarget) + drag_force
+    return (force * vTarget) / (.105 * CS.gasRpm)
+    # return calc_engine_torque(aTarget, pitch, CS.transmission_gear, drag_force)
 
   def acc_gas(self, CC, CS, frame, aTarget, vTarget, under_accel_frame_count):
     accelerating = aTarget > 0 and vTarget > CS.out.vEgo + SLOW_WINDOW
     if accelerating:
+      vSmoothTarget = vTarget
       aSmoothTarget = (aTarget + CS.out.aEgo) / 2
     else:
+      vSmoothTarget = (vTarget + CS.out.vEgo) / 2
       aSmoothTarget = aTarget
-    cruise = self.torque(CC, CS, aSmoothTarget)
+    cruise = self.torque(CC, CS, aSmoothTarget, vSmoothTarget)
 
     if aTarget > 0:
       # adjust for hills and towing
