@@ -139,7 +139,7 @@ class LongCarControllerV3(LongCarController):
                      and self.torque(CC, CS, aTarget) + self.torq_adjust > CS.torqMin
 
       if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking):  # gas
-        under_accel_frame_count = self.acc_gas(CS, frame, aTarget, vTarget, under_accel_frame_count)
+        under_accel_frame_count = self.acc_gas(CC, CS, frame, aTarget, vTarget, under_accel_frame_count)
 
       elif aTarget < 0:  # brake
         self.acc_brake(CS, aTarget, vTarget, speed_to_far_off)
