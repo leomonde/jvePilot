@@ -119,15 +119,14 @@ class LongCarControllerV3(LongCarController):
       return None
 
     under_accel_frame_count = 0
-    aTarget = longitudinalPlan.speeds[8] if len(longitudinalPlan.speeds) > 8 else CC.actuators.accel
-    bTarget = CC.actuators.accel
+    aTarget = CC.actuators.accel
     vTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
     long_stopping = CC.actuators.longControlState == LongCtrlState.stopping
 
     override_request = CS.out.gasPressed or CS.out.brakePressed
     fidget_stopped_brake_frame = CS.out.standstill and CS.das_3['COUNTER'] % 2 == 0  # change brake to keep Jeep stopped
     if not override_request:
-      stop_req = long_stopping or (CS.out.standstill and bTarget <= 0)
+      stop_req = long_stopping or (CS.out.standstill and aTarget <= 0)
       go_req = not stop_req and CS.out.standstill
 
       if go_req:
@@ -136,14 +135,16 @@ class LongCarControllerV3(LongCarController):
 
       currently_braking = self.last_brake is not None
       speed_to_far_off = abs(CS.out.vEgo - vTarget) > COAST_WINDOW
-      engine_brake = TORQ_BRAKE_MAX < aTarget < 0 and not speed_to_far_off and vTarget > LOW_WINDOW \
+      can_use_engine_brake = not speed_to_far_off and vTarget > LOW_WINDOW
+      engine_brake = can_use_engine_brake and TORQ_BRAKE_MAX < aTarget < 0 \
                      and self.torque(CC, CS, aTarget) + self.torq_adjust > CS.torqMin
+      let_off_gas = can_use_engine_brake and vTarget < CS.out.vEgo and aTarget > 0 > longitudinalPlan.accel[-1] if len(longitudinalPlan.accel) else 0
 
-      if go_req or ((bTarget >= 0 or engine_brake) and not currently_braking):  # gas
+      if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking and not let_off_gas):  # gas
         under_accel_frame_count = self.acc_gas(CC, CS, frame, aTarget, vTarget, under_accel_frame_count)
 
-      elif bTarget < 0:  # brake
-        self.acc_brake(CS, bTarget, vTarget, speed_to_far_off)
+      elif aTarget < 0:  # brake
+        self.acc_brake(CS, aTarget, vTarget, speed_to_far_off)
 
       elif self.last_brake is not None:  # let up on the brake
         self.last_brake += BRAKE_CHANGE
@@ -156,7 +157,7 @@ class LongCarControllerV3(LongCarController):
           self.last_torque = None
 
       if stop_req:
-        brake = self.last_brake = bTarget # + (0.01 if fidget_stopped_brake_frame else 0.0)
+        brake = self.last_brake = aTarget # + (0.01 if fidget_stopped_brake_frame else 0.0)
         torque = self.last_torque = None
       elif go_req:
         brake = self.last_brake = None
@@ -181,8 +182,8 @@ class LongCarControllerV3(LongCarController):
 
     if under_accel_frame_count == 0:
       self.max_gear = None
-      if bTarget < 0 and self.torq_adjust > 0:  # we are cooling down
-        self.torq_adjust = max(0, self.torq_adjust - max(bTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
+      if aTarget < 0 and self.torq_adjust > 0:  # we are cooling down
+        self.torq_adjust = max(0, self.torq_adjust - max(aTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
     elif under_accel_frame_count > CAN_DOWNSHIFT_ACCEL_FRAMES:
       if CS.out.vEgo < vTarget - COAST_WINDOW / CarInterface.accel_max(CS) \
           and CS.out.aEgo < CarInterface.accel_max(CS) / 5 \
@@ -193,7 +194,7 @@ class LongCarControllerV3(LongCarController):
 
     self.under_accel_frame_count = under_accel_frame_count
 
-    can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, bTarget, vTarget))
+    can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, aTarget, vTarget))
 
     brake_prep = brake is not None and len(longitudinalPlan.accels) and longitudinalPlan.accels[0] - longitudinalPlan.accels[-1] > 1.0
 
