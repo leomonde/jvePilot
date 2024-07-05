@@ -2,6 +2,7 @@ import math
 
 from cereal import car
 from common.conversions import Conversions as CV
+from openpilot.common.numpy_fast import clip
 from openpilot.selfdrive.car.chrysler import chryslercan
 from openpilot.selfdrive.car.chrysler.long_carcontroller import LongCarController
 from openpilot.selfdrive.car.chrysler.interface import CarInterface
@@ -119,8 +120,8 @@ class LongCarControllerV3(LongCarController):
       return None
 
     under_accel_frame_count = 0
-    aTarget = CC.actuators.accel
-    vTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
+    aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS) )
+    vTarget = longitudinalPlan.speeds[0] if len(longitudinalPlan.speeds) else 0
     long_stopping = CC.actuators.longControlState == LongCtrlState.stopping
 
     override_request = CS.out.gasPressed or CS.out.brakePressed
@@ -239,7 +240,7 @@ class LongCarControllerV3(LongCarController):
       if offset > TORQ_ADJUST_THRESHOLD:
         under_accel_frame_count = self.under_accel_frame_count + 1  # inc under accelerating frame count
         if frame - self.under_accel_frame_count > START_ADJUST_ACCEL_FRAMES:
-          self.torq_adjust += offset * (CarInterface.ACCEL_MAX / CarInterface.accel_max(CS))
+          self.torq_adjust += 0.1  # offset * (CarInterface.ACCEL_MAX / CarInterface.accel_max(CS))
 
     if cruise + self.torq_adjust > CS.torqMax:  # keep the adjustment in check
       self.torq_adjust = max(0, CS.torqMax - cruise)
