@@ -119,8 +119,8 @@ class LongCarControllerV2(LongCarController):
         drag_force = calc_drag_force(CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
         torque = calc_engine_torque(accel, pitch, CS.transmission_gear, drag_force)
         torque = torque + (self.torq_adjust if torque > 0 else 0)  # adjust for hills and towing
-        gas = clip(min(torque, self.last_gas + 2), CS.torqMin, CS.torqMax)
-        self.last_gas = max(gas, 0)
+        gas = clip(min(torque, self.last_gas + 2), CS.torqMin + 1, CS.torqMax)
+        self.last_gas = gas
 
         vTarget = longitudinalPlan.speeds[-1]
         speed_to_far_off = abs(CS.out.vEgo - vTarget) > COAST_WINDOW
