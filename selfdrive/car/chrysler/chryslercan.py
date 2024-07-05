@@ -81,7 +81,7 @@ def create_wheel_buttons_command(packer, bus, frame, buttons):
 
   return packer.make_can_msg("CRUISE_BUTTONS", bus, values)
 
-def acc_log(packer, adjustment, aTarget, nTarget, vTarget):
+def acc_log(packer, adjustment, aTarget, bTarget, vTarget):
   values = {
     'OP_A_TARGET': aTarget,
     'OP_B_TARGET': bTarget,
