@@ -41,28 +41,27 @@ FINAL_DRIVE_RATIOS = [x * AXLE_RATIO for x in [4.71, 3.14, 2.10, 1.67, 1.29, 1.0
 CdA = 13.0 / 10.764 # CdA = frontal drag coefficient x area (ft^2 converted to m^2)
 # https://www.epa.gov/compliance-and-fuel-economy-data/data-cars-used-testing-fuel-economy
 ROLLING_RESISTANCE_COEFF = 46.31 / 5500 # Target Coef A (lbf) / Equivalent Test Weight (lbs.)
-VEHICLE_MASS = 2495 # kg
 GRAVITY = 9.81 # m/s^2
 AIR_DENSITY = 1.225 # kg/m3 (sea level air density of dry air @ 15° C)
 
-def calc_motion_force(aEgo, road_pitch):
-  force_parallel = VEHICLE_MASS * aEgo
-  force_perpendicular = VEHICLE_MASS * GRAVITY * math.sin(road_pitch)
+def calc_motion_force(aEgo, vehicleMass, road_pitch):
+  force_parallel = vehicleMass * aEgo
+  force_perpendicular = vehicleMass * GRAVITY * math.sin(road_pitch)
   return force_parallel + force_perpendicular
 
-def calc_drag_force(engine_torque, transmision_gear, road_pitch, aEgo, vEgo, wind=0):
-  if vEgo < 2:
+def calc_drag_force(vehicleMass, engine_torque, transmision_gear, road_pitch, aEgo, vEgo, wind=0):
+  if vEgo < LOW_WINDOW:
     # https://x-engineer.org/rolling-resistance/
-    force_rolling = ROLLING_RESISTANCE_COEFF * VEHICLE_MASS * GRAVITY
+    force_rolling = ROLLING_RESISTANCE_COEFF * vehicleMass * GRAVITY
     # https://x-engineer.org/aerodynamic-drag/
     force_drag = 0.5 * CdA * AIR_DENSITY * ((vEgo - wind)**2)
     return force_rolling + force_drag
 
   total_force = engine_torque * FINAL_DRIVE_RATIOS[transmision_gear-1] / WHEEL_RADIUS
-  return total_force - calc_motion_force(aEgo, road_pitch)
+  return total_force - calc_motion_force(aEgo, vehicleMass, road_pitch)
 
-def calc_engine_torque(accel, pitch, transmission_gear, drag_force):
-  force_total = calc_motion_force(accel, pitch) + drag_force
+def calc_engine_torque(accel, vehicleMass, pitch, transmission_gear, drag_force):
+  force_total = calc_motion_force(accel, vehicleMass, pitch) + drag_force
   # https://x-engineer.org/calculate-wheel-torque-engine/
   wheel_torque = force_total * WHEEL_RADIUS
   engine_torque = wheel_torque / FINAL_DRIVE_RATIOS[int(transmission_gear)-1]
@@ -120,7 +119,7 @@ class LongCarControllerV3(LongCarController):
       return None
 
     under_accel_frame_count = 0
-    aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS) )
+    aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
     vTarget = longitudinalPlan.speeds[0] if len(longitudinalPlan.speeds) else 0
     long_stopping = CC.actuators.longControlState == LongCtrlState.stopping
 
@@ -216,13 +215,12 @@ class LongCarControllerV3(LongCarController):
       return accel
     return 0
 
-  @staticmethod
-  def torque(CC, CS, aTarget, vTarget):
+  def torque(self, CC, CS, aTarget, vTarget):
     pitch = CC.orientationNED[1] if len(CC.orientationNED) > 1 else 0
-    drag_force = calc_drag_force(CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
-    force = (VEHICLE_MASS * aTarget) + drag_force
-    return (force * vTarget) / (.105 * CS.gasRpm)
-    # return calc_engine_torque(aTarget, pitch, CS.transmission_gear, drag_force)
+    drag_force = calc_drag_force(self.vehicleMass, CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
+    force = (self.vehicleMass * aTarget) + drag_force
+    # return (force * vTarget) / (.105 * CS.gasRpm)
+    return calc_engine_torque(aTarget, self.vehicleMass, pitch, CS.transmission_gear, drag_force)
 
   def acc_gas(self, CC, CS, frame, aTarget, vTarget, under_accel_frame_count):
     accelerating = aTarget > 0 and vTarget > CS.out.vEgo + SLOW_WINDOW
