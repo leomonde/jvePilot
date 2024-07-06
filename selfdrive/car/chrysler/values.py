@@ -36,7 +36,7 @@ class CAR(Platforms):
     [ChryslerCarDocs("Chrysler Pacifica Hybrid 2017")],
     ChryslerCarSpecs(mass=2242., wheelbase=3.089, steerRatio=16.2,
                      gearRatios=[4.70, 2.84, 1.91, 1.38, 1.00, 0.81, 0.70, 0.58],
-                     axleRatio=3.45),
+                     axleRatio=3.25),
   )
   CHRYSLER_PACIFICA_2018_HYBRID = ChryslerPlatformConfig(
     [ChryslerCarDocs("Chrysler Pacifica Hybrid 2018")],
@@ -67,7 +67,9 @@ class CAR(Platforms):
   # Jeep
   JEEP_GRAND_CHEROKEE = ChryslerPlatformConfig(  # includes 2017 Trailhawk
     [ChryslerCarDocs("Jeep Grand Cherokee 2016-18", video_link="https://www.youtube.com/watch?v=eLR9o2JkuRk")],
-    ChryslerCarSpecs(mass=1778., wheelbase=2.71, steerRatio=16.7, gearRatios=[4.71, 3.14, 2.10, 1.67, 1.29, 1.00, 0.84, 0.67]),
+    ChryslerCarSpecs(mass=1778., wheelbase=2.71, steerRatio=16.7,
+                     gearRatios=[4.71, 3.14, 2.10, 1.67, 1.29, 1.00, 0.84, 0.67],
+                     axleRatio=3.45)
   )
 
   JEEP_GRAND_CHEROKEE_2019 = ChryslerPlatformConfig(  # includes 2020 Trailhawk
