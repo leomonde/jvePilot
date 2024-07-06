@@ -81,7 +81,7 @@ class LongCarControllerV3(LongCarController):
     self.vehicleMass = CP.mass
     self.max_gear = None
 
-    self.finalDriveRatios = [x * CP.AXEL_RATIO for x in CP.GEAR_RATIOS]
+    self.finalDriveRatios = [x * CP.axleRatio for x in CP.gearRatios]
 
 
   # T = (mass x accel x velocity x 1000)/(.105 x Engine rpm)
