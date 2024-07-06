@@ -121,6 +121,7 @@ class LongCarControllerV3(LongCarController):
     under_accel_frame_count = 0
     aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
     vTarget = longitudinalPlan.speeds[0] if len(longitudinalPlan.speeds) else 0
+    vfTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
     long_stopping = CC.actuators.longControlState == LongCtrlState.stopping
 
     override_request = CS.out.gasPressed or CS.out.brakePressed
@@ -134,11 +135,11 @@ class LongCarControllerV3(LongCarController):
         self.last_brake = None
 
       currently_braking = self.last_brake is not None
-      speed_to_far_off = abs(CS.out.vEgo - vTarget) > COAST_WINDOW
-      can_use_engine_brake = not speed_to_far_off and vTarget > LOW_WINDOW
+      speed_to_far_off = abs(CS.out.vEgo - vfTarget) > COAST_WINDOW
+      can_use_engine_brake = not speed_to_far_off and CS.out.vEgo > LOW_WINDOW
+      let_off_gas = can_use_engine_brake and aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
       engine_brake = can_use_engine_brake and TORQ_BRAKE_MAX < aTarget < 0 \
                      and self.torque(CC, CS, aTarget, vTarget) + self.torq_adjust > CS.torqMin
-      let_off_gas = can_use_engine_brake and vTarget < CS.out.vEgo and aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
 
       if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking and not let_off_gas):  # gas
         under_accel_frame_count = self.acc_gas(CC, CS, frame, aTarget, vTarget, under_accel_frame_count)
@@ -218,7 +219,7 @@ class LongCarControllerV3(LongCarController):
   def torque(self, CC, CS, aTarget, vTarget):
     pitch = CC.orientationNED[1] if len(CC.orientationNED) > 1 else 0
     drag_force = calc_drag_force(self.vehicleMass, CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
-    force = (self.vehicleMass * aTarget) + drag_force
+    # force = (self.vehicleMass * aTarget) + drag_force
     # return (force * vTarget) / (.105 * CS.gasRpm)
     return calc_engine_torque(aTarget, self.vehicleMass, pitch, CS.transmission_gear, drag_force)
 
@@ -238,7 +239,7 @@ class LongCarControllerV3(LongCarController):
       if offset > TORQ_ADJUST_THRESHOLD:
         under_accel_frame_count = self.under_accel_frame_count + 1  # inc under accelerating frame count
         if frame - self.under_accel_frame_count > START_ADJUST_ACCEL_FRAMES:
-          self.torq_adjust += 0.1  # offset * (CarInterface.ACCEL_MAX / CarInterface.accel_max(CS))
+          self.torq_adjust += offset * (CarInterface.accel_max(CS) / CarInterface.ACCEL_MAX)
 
     if cruise + self.torq_adjust > CS.torqMax:  # keep the adjustment in check
       self.torq_adjust = max(0, CS.torqMax - cruise)
