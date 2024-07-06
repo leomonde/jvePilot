@@ -195,14 +195,14 @@ class LongCarControllerV3(LongCarController):
     return 0
 
   def calc_motion_force(self, aEgo, road_pitch):
-    force_parallel = self.params.vehicleMass * aEgo
-    force_perpendicular = self.params.vehicleMass * GRAVITY * math.sin(road_pitch)
+    force_parallel = self.vehicleMass * aEgo
+    force_perpendicular = self.vehicleMass * GRAVITY * math.sin(road_pitch)
     return force_parallel + force_perpendicular
 
   def calc_drag_force(self, engine_torque, transmision_gear, road_pitch, aEgo, vEgo, wind=0):
     if vEgo < LOW_WINDOW:
       # https://x-engineer.org/rolling-resistance/
-      force_rolling = ROLLING_RESISTANCE_COEFF * self.params.vehicleMass * GRAVITY
+      force_rolling = ROLLING_RESISTANCE_COEFF * self.vehicleMass * GRAVITY
       # https://x-engineer.org/aerodynamic-drag/
       force_drag = 0.5 * CdA * AIR_DENSITY * ((vEgo - wind) ** 2)
       return force_rolling + force_drag
