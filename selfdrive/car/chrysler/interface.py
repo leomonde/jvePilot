@@ -37,7 +37,7 @@ class CarInterface(CarInterfaceBase):
     ret.dashcamOnly = candidate in RAM_HD
 
     # radar parsing needs some work, see https://github.com/commaai/openpilot/issues/26842
-    ret.radarUnavailable = cachedParams.get_bool("jvePilot.settings.visionOnly", 1000)
+    ret.radarUnavailable = False
     ret.steerActuatorDelay = 0.1
     ret.steerLimitTimer = 0.4
 
