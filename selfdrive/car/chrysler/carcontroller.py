@@ -130,7 +130,7 @@ class CarController(CarControllerBase):
       # auto set profile
       follow_distance = CC.jvePilotState.carState.accFollowDistance or 0
       acc_eco = CC.jvePilotState.carControl.accEco or 0
-      personality = DRIVE_PERSONALITY[acc_eco][follow_distance]
+      personality = acc_eco if CS.longControl else DRIVE_PERSONALITY[acc_eco][follow_distance]
       if personality != self.last_personality:
         self.last_personality = personality
         self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
