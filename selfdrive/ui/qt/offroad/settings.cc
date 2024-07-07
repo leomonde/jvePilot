@@ -112,7 +112,7 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
       "Keep ahead at Eco 2 (MPH)",
       "Default: 5 mph, Min: 1, Max: 100\n"
         "The higher the number the more acceleration that occurs."
-    }
+    },
     { "jvePilot.settings.accEco.longAccelLevel1",
       0, 2,
       "Max acceleration at Eco 1 (m/s²)",
