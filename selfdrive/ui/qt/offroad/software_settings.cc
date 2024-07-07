@@ -70,7 +70,7 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
       checkForUpdates();
     }
   });
-  if (!params.getBool("IsTestedBranch")) {
+  if (!params.getBool("IsReleaseBranch")) {
     addItem(targetBranchBtn);
   }
 

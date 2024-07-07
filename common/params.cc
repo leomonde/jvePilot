@@ -91,6 +91,8 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"jvePilot.carState.accEco", PERSISTENT},
     {"jvePilot.settings.accEco.speedAheadLevel1", PERSISTENT},
     {"jvePilot.settings.accEco.speedAheadLevel2", PERSISTENT},
+    {"jvePilot.settings.accEco.longAccelLevel1", PERSISTENT},
+    {"jvePilot.settings.accEco.longAccelLevel2", PERSISTENT},
     {"jvePilot.settings.autoFollow", PERSISTENT},
     {"jvePilot.settings.autoFollow.speed1-2Bars", PERSISTENT},
     {"jvePilot.settings.autoFollow.speed2-3Bars", PERSISTENT},

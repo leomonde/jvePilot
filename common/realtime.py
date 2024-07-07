@@ -2,6 +2,7 @@
 import gc
 import os
 import time
+import random
 from collections import deque
 
 from setproctitle import getproctitle
@@ -74,7 +75,8 @@ class Ratekeeper:
   def keep_time(self) -> bool:
     lagged = self.monitor_time()
     if self._remaining > 0:
-      time.sleep(self._remaining)
+      drift = random.random() * self._interval
+      time.sleep(self._remaining + drift)
     return lagged
 
   # Monitors the cumulative lag, but does not enforce a rate
