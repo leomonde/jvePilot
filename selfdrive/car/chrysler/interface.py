@@ -23,11 +23,11 @@ class CarInterface(CarInterfaceBase):
     if CS.longControl:
       eco = cachedParams.get_float('jvePilot.carState.accEco', 1000)
       if eco == 1:
-        maxAccel = .5  # cachedParams.get_float('jvePilot.settings.longControl.eco1', 1000)
+        maxAccel = cachedParams.get_float('jvePilot.settings.accEco.longAccelLevel1', 1000)
       elif eco == 2:
-        maxAccel = 1  # cachedParams.get_float('jvePilot.settings.longControl.eco2', 1000)
+        maxAccel = cachedParams.get_float('jvePilot.settings.accEco.longAccelLevel2', 1000)
       else:
-        maxAccel = 2  # cachedParams.get_float('jvePilot.settings.longControl.eco0', 1000)
+        maxAccel = 2
 
     return maxAccel
 

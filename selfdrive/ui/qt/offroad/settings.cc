@@ -113,6 +113,18 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
       "Default: 5 mph, Min: 1, Max: 100\n"
         "The higher the number the more acceleration that occurs."
     }
+    { "jvePilot.settings.accEco.longAccelLevel1",
+      0, 2,
+      "Max acceleration at Eco 1 (m/s²)",
+      "Default: 1 m/s², Min: 0, Max: 2\n"
+        "The higher the number the more acceleration that occurs."
+    },
+    { "jvePilot.settings.accEco.longAccelLevel2",
+      0, 2,
+      "Max acceleration at Eco 2 (m/s²)",
+      "Default: 1.5 m/s² mph, Min: 0, Max: 2\n"
+        "The higher the number the more acceleration that occurs."
+    }
   };
   addItem(new LabelControl("ACC Eco",
                                   "",

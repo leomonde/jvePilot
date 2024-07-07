@@ -13,6 +13,7 @@ class LongCarController:
     self.last_das_3_counter = -1
 
     self.settingsParams = Params()
+    self.personality = int(self.settingsParams.get('LongitudinalPersonality'))
 
   def button_control(self, CC, CS):
     if not CS.longControl:
@@ -25,15 +26,17 @@ class LongCarController:
         button_pressed(CS.out, ButtonType.resumeCruise):
       CS.longEnabled = True
 
-    accDiff = None
+    accDiff = 0
     if button_pressed(CS.out, ButtonType.followInc, False):
       if CC.jvePilotState.carControl.accEco < 2:
         accDiff = 1
     elif button_pressed(CS.out, ButtonType.followDec, False):
       if CC.jvePilotState.carControl.accEco > 0:
         accDiff = -1
-    if accDiff is not None:
-      newEco = CC.jvePilotState.carControl.accEco + accDiff
+    newEco = CC.jvePilotState.carControl.accEco + accDiff
+
+    if newEco != CC.jvePilotState.carControl.accEco or newEco != self.personality:
+      self.personality = newEco
       self.settingsParams.put_nonblocking('LongitudinalPersonality', str(newEco))
       self.settingsParams.put_nonblocking("jvePilot.carState.accEco", str(newEco))
 
