@@ -96,12 +96,18 @@ class LongCarControllerV3(LongCarController):
       self.max_gear = None
       return None
 
-    under_accel_frame_count = 0
-    aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
-    vTarget = longitudinalPlan.speeds[0] if len(longitudinalPlan.speeds) else 0
+    if CS.out.vEgo < LOW_WINDOW:
+      # full accel when stopped.  TODO: Should this be exponential fall off?
+      boost = (self.params.ACCEL_MAX - CarInterface.accel_max(CS)) * ((LOW_WINDOW - CS.out.vEgo) / LOW_WINDOW)
+      aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS) + boost)
+    else:
+      aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
+
+    vTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
     vfTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
     long_stopping = CC.actuators.longControlState == LongCtrlState.stopping
 
+    under_accel_frame_count = 0
     override_request = CS.out.gasPressed or CS.out.brakePressed
     fidget_stopped_brake_frame = CS.out.standstill and CS.das_3['COUNTER'] % 2 == 0  # change brake to keep Jeep stopped
     if not override_request:
@@ -114,12 +120,11 @@ class LongCarControllerV3(LongCarController):
 
       currently_braking = self.last_brake is not None
       speed_to_far_off = abs(CS.out.vEgo - vfTarget) > COAST_WINDOW
-      can_use_engine_brake = not speed_to_far_off and CS.out.vEgo > LOW_WINDOW
-      let_off_gas = can_use_engine_brake and aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
-      engine_brake = can_use_engine_brake and TORQ_BRAKE_MAX < aTarget < 0 \
+      allow_smart_slowing = not speed_to_far_off and CS.out.vEgo > LOW_WINDOW
+      engine_brake = allow_smart_slowing and TORQ_BRAKE_MAX < aTarget < 0 \
                      and self.torque(CC, CS, aTarget, vTarget) + self.torq_adjust > CS.torqMin
 
-      if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking and not let_off_gas):  # gas
+      if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking):  # gas
         under_accel_frame_count = self.acc_gas(CC, CS, frame, aTarget, vTarget, under_accel_frame_count)
 
       elif aTarget < 0:  # brake
@@ -159,10 +164,15 @@ class LongCarControllerV3(LongCarController):
       go_req = None
       torque = None
 
+    # looking good, undo some of the things we did to make us go faster
     if under_accel_frame_count == 0:
       self.max_gear = None
-      if aTarget < 0 and self.torq_adjust > 0:  # we are cooling down
+      will_be_slowing = aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
+      if will_be_slowing:
+        self.torq_adjust = max(0, self.torq_adjust - longitudinalPlan.accels[-1])
+      elif aTarget < 0 and self.torq_adjust > 0:
         self.torq_adjust = max(0, self.torq_adjust - max(aTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
+
     elif under_accel_frame_count > CAN_DOWNSHIFT_ACCEL_FRAMES:
       if CS.out.vEgo < vTarget - COAST_WINDOW / CarInterface.accel_max(CS) \
           and CS.out.aEgo < CarInterface.accel_max(CS) / 5 \
@@ -199,7 +209,7 @@ class LongCarControllerV3(LongCarController):
     force_perpendicular = self.vehicleMass * GRAVITY * math.sin(road_pitch)
     return force_parallel + force_perpendicular
 
-  def calc_drag_force(self, engine_torque, transmision_gear, road_pitch, aEgo, vEgo, wind=0):
+  def calc_drag_force(self, engine_torque, transmission_gear, road_pitch, aEgo, vEgo, wind=0):
     if vEgo < LOW_WINDOW:
       # https://x-engineer.org/rolling-resistance/
       force_rolling = ROLLING_RESISTANCE_COEFF * self.vehicleMass * GRAVITY
@@ -207,8 +217,9 @@ class LongCarControllerV3(LongCarController):
       force_drag = 0.5 * CdA * AIR_DENSITY * ((vEgo - wind) ** 2)
       return force_rolling + force_drag
 
-    total_force = engine_torque * self.finalDriveRatios[transmision_gear - 1] / WHEEL_RADIUS
-    return total_force - self.calc_motion_force(aEgo, road_pitch)
+    return 0
+    #total_force = engine_torque * self.finalDriveRatios[transmission_gear - 1] / WHEEL_RADIUS
+    #return total_force - self.calc_motion_force(aEgo, road_pitch)
 
   def calc_engine_torque(self, accel, pitch, transmission_gear, drag_force):
     force_total = self.calc_motion_force(accel, pitch) + drag_force
@@ -220,9 +231,9 @@ class LongCarControllerV3(LongCarController):
   def torque(self, CC, CS, aTarget, vTarget):
     pitch = CC.orientationNED[1] if len(CC.orientationNED) > 1 else 0
     drag_force = self.calc_drag_force(CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
-    # force = (self.vehicleMass * aTarget) + drag_force
-    # return (force * vTarget) / (.105 * CS.gasRpm)
-    return self.calc_engine_torque(aTarget, pitch, CS.transmission_gear, drag_force)
+    force = (self.vehicleMass * aTarget) + drag_force
+    return (force * vTarget) / (.105 * CS.gasRpm)
+    #return self.calc_engine_torque(aTarget, pitch, CS.transmission_gear, drag_force)
 
   def acc_gas(self, CC, CS, frame, aTarget, vTarget, under_accel_frame_count):
     accelerating = aTarget > 0 and vTarget > CS.out.vEgo + SLOW_WINDOW
