@@ -36,7 +36,7 @@ def manager_init() -> None:
     ("jvePilot.carState.accEco", "1"),
     ("jvePilot.settings.accEco.speedAheadLevel1", "7"),
     ("jvePilot.settings.accEco.speedAheadLevel2", "5"),
-    ("jvePilot.settings.accEco.longAccelLevel1", "1"),
+    ("jvePilot.settings.accEco.longAccelLevel1", "1.7"),
     ("jvePilot.settings.accEco.longAccelLevel2", "1.5"),
     ("jvePilot.settings.autoFollow", "1"),
     ("jvePilot.settings.autoFollow.speed1-2Bars", "15"),
