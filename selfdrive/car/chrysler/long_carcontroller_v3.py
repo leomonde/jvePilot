@@ -167,11 +167,14 @@ class LongCarControllerV3(LongCarController):
     # looking good, undo some of the things we did to make us go faster
     if under_accel_frame_count == 0:
       self.max_gear = None
-      will_be_slowing = aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
-      if will_be_slowing:
-        self.torq_adjust = max(0, self.torq_adjust - longitudinalPlan.accels[-1])
-      elif aTarget < 0 and self.torq_adjust > 0:
-        self.torq_adjust = max(0, self.torq_adjust - max(aTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
+      if self.torq_adjust > 0:
+        will_be_slowing = aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
+        if will_be_slowing:  # going to not need it
+          self.torq_adjust = max(0, self.torq_adjust - longitudinalPlan.accels[-1])
+        elif aTarget < 0:  # not needed
+          self.torq_adjust = max(0, self.torq_adjust - max(aTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
+        elif CS.out.aEgo > aTarget:  # Too much
+          self.torq_adjust = max(0, self.torq_adjust - (CS.out.aEgo - aTarget))
 
     elif under_accel_frame_count > CAN_DOWNSHIFT_ACCEL_FRAMES:
       if CS.out.vEgo < vTarget - COAST_WINDOW / CarInterface.accel_max(CS) \
