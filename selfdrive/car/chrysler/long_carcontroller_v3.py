@@ -15,23 +15,17 @@ SLOW_WINDOW = CV.MPH_TO_MS * 20
 COAST_WINDOW = CV.MPH_TO_MS * 2
 
 # accelerator
-ACCEL_TORQ_SLOW = 40  # add this when going SLOW
-
-# ACCEL_TORQ_MAX = 360
-UNDER_ACCEL_MULTIPLIER = 1.
 TORQ_RELEASE_CHANGE = 0.35
 TORQ_ADJUST_THRESHOLD = 0.3
 START_ADJUST_ACCEL_FRAMES = 100
 CAN_DOWNSHIFT_ACCEL_FRAMES = 200
 ADJUST_ACCEL_COOLDOWN_MAX = 1
-MIN_TORQ_CHANGE = 2
-ACCEL_TO_NM = 1200
 TORQ_BRAKE_MAX = -0.1
 
 # braking
 BRAKE_CHANGE = 0.06
 
-
+## COMMA
 TIRE_SIZE = [275, 55, 20] # 275/55R20
 # https://x-engineer.org/calculate-wheel-radius/
 WHEEL_RADIUS = 0.95 * ((TIRE_SIZE[2] * 25.4 / 2) + (TIRE_SIZE[0] * TIRE_SIZE[1] / 100)) / 1000
@@ -173,7 +167,7 @@ class LongCarControllerV3(LongCarController):
           self.torq_adjust = max(0, self.torq_adjust - longitudinalPlan.accels[-1])
         elif aTarget < 0:  # not needed
           self.torq_adjust = max(0, self.torq_adjust - max(aTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
-        elif CS.out.aEgo > aTarget:  # Too much
+        elif CS.out.aEgo > aTarget and CS.out.aEgo - aTarget > TORQ_ADJUST_THRESHOLD / 2:  # Too much
           self.torq_adjust = max(0, self.torq_adjust - (CS.out.aEgo - aTarget))
 
     elif under_accel_frame_count > CAN_DOWNSHIFT_ACCEL_FRAMES:
