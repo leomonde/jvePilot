@@ -167,7 +167,7 @@ class LongCarControllerV3(LongCarController):
           self.torq_adjust = max(0, self.torq_adjust - longitudinalPlan.accels[-1])
         elif aTarget < 0:  # not needed
           self.torq_adjust = max(0, self.torq_adjust - max(aTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
-        elif CS.out.aEgo > aTarget and CS.out.aEgo - aTarget > TORQ_ADJUST_THRESHOLD / 2:  # Too much
+        elif CS.out.aEgo > aTarget:  # Too much
           self.torq_adjust = max(0, self.torq_adjust - (CS.out.aEgo - aTarget))
 
     elif under_accel_frame_count > CAN_DOWNSHIFT_ACCEL_FRAMES:
