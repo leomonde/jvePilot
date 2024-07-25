@@ -446,7 +446,7 @@ class Controls:
            if ps.safetyModel not in IGNORED_SAFETY_MODES):
       self.mismatch_counter += 1
 
-    if self.notify_ui or self.sm.frame % 20:
+    if self.notify_ui or self.sm.frame % 25:
       self.notify_ui = False
       self.ui_notify()
 
