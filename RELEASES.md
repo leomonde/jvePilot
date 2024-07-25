@@ -1,6 +1,10 @@
-Version jvePilot-0.9.7(v3.16.2)
+Version jvePilot-0.9.7(v3.16.3)
 ========================
 Visit http://bit.ly/jvereadme for more information
+* Fix and enable the use of radar  
+
+Version jvePilot-0.9.7(v3.16.2)
+========================
 * Improved ACC speed selection by projecting 2 seconds beyond what the model produces
   * Better braking and acceleration
   * Acceleration improved when ACC Eco is off
