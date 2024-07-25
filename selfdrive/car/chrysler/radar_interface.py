@@ -18,12 +18,6 @@ def _create_radar_can_parser(car_fingerprint):
     return None
 
   msg_n = len(RADAR_MSGS_C)
-  # list of [(signal name, message name or number), (...)]
-  # [('RADAR_STATE', 1024),
-  #  ('LONG_DIST', 1072),
-  #  ('LONG_DIST', 1073),
-  #  ('LONG_DIST', 1074),
-  #  ('LONG_DIST', 1075),
 
   messages = list(zip(RADAR_MSGS_C +
                       RADAR_MSGS_D,
