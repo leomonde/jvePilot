@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from opendbc.can.parser import CANParser
 from cereal import car
-from openpilot.common.conversions import Conversions as CV
 from openpilot.selfdrive.car.interfaces import RadarInterfaceBase
 from openpilot.selfdrive.car.chrysler.values import DBC
 from common.params import Params
+from common.cached_params import CachedParams
 from math import tan
 
 RADAR_MSGS_C = list(range(0x2c2, 0x2d4+2, 2))  # c_ messages 706,...,724
@@ -13,20 +13,11 @@ LAST_MSG = max(RADAR_MSGS_C + RADAR_MSGS_D)
 NUMBER_MSGS = len(RADAR_MSGS_C) + len(RADAR_MSGS_D)
 
 def _create_radar_can_parser(car_fingerprint):
-  if Params().get_bool("jvePilot.settings.visionOnly"):
-    return None
-
   dbc = DBC[car_fingerprint]['radar']
   if dbc is None:
     return None
 
   msg_n = len(RADAR_MSGS_C)
-  # list of [(signal name, message name or number), (...)]
-  # [('RADAR_STATE', 1024),
-  #  ('LONG_DIST', 1072),
-  #  ('LONG_DIST', 1073),
-  #  ('LONG_DIST', 1074),
-  #  ('LONG_DIST', 1075),
 
   messages = list(zip(RADAR_MSGS_C +
                       RADAR_MSGS_D,
@@ -50,10 +41,11 @@ class RadarInterface(RadarInterfaceBase):
     self.updated_messages = set()
     self.trigger_msg = LAST_MSG
 
+    self.cachedParams = CachedParams()
     self.yRel_multiplier = -1 if Params().get_bool("jvePilot.settings.reverseRadar") else 1
 
   def update(self, can_strings):
-    if self.rcp is None or self.CP.radarUnavailable:
+    if self.rcp is None or self.CP.radarUnavailable or self.cachedParams.get_bool("jvePilot.settings.visionOnly", 1000):
       return super().update(None)
 
     vls = self.rcp.update_strings(can_strings)
@@ -77,25 +69,17 @@ class RadarInterface(RadarInterfaceBase):
         self.pts[trackId].trackId = trackId
         self.pts[trackId].aRel = float('nan')
         self.pts[trackId].yvRel = float('nan')
-        self.pts[trackId].measured = True
 
-      if 'LONG_DIST' in cpt:
+      if 'LONG_DIST' in cpt:  # c_* message
         self.pts[trackId].dRel = cpt['LONG_DIST']  # from front of car
-      if 'REL_SPEED' in cpt:
+        self.pts[trackId].yRel = cpt['LAT_ANGLE']  # in car frame's y axis, left is positive
+        self.pts[trackId].yRel = tan(self.pts[trackId].yRel) * self.pts[trackId].dRel * self.yRel_multiplier
+      else:  # d_* message
         self.pts[trackId].vRel = cpt['REL_SPEED']
-      if 'MEASURED' in cpt:
         self.pts[trackId].measured = bool(cpt['MEASURED'])
-      if 'LAT_ANGLE' in cpt and 'LONG_DIST' in cpt:
-        self.pts[trackId].yRel = tan(cpt['LAT_ANGLE']) * cpt['LONG_DIST'] * self.yRel_multiplier
-      elif 'LAT_DIST' in cpt:
-        self.pts[trackId].yRel = cpt['LAT_DIST'] * self.yRel_multiplier
-
-      # TODO: Figure out how to provide this to log
-      # if 'PROBABILITY' in cpt:
-      #   self.pts[trackId].modelProb = float(cpt['PROBABILITY']) / 255
 
     # We want a list, not a dictionary. Filter out LONG_DIST==0 because that means it's not valid.
-    ret.points = [x for x in self.pts.values() if x.dRel != 0]
+    ret.points = [x for x in self.pts.values() if x.measured and 290 > x.dRel > 260]
 
     self.updated_messages.clear()
     return ret
