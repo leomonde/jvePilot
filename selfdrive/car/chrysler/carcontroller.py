@@ -7,7 +7,7 @@ from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParam
 from openpilot.selfdrive.car.interfaces import CarControllerBase
 
 from openpilot.selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
-from openpilot.selfdrive.car.chrysler.long_carcontroller import LongCarController
+from openpilot.selfdrive.car.chrysler.long_carcontroller_v1 import LongCarControllerV1
 from common.conversions import Conversions as CV
 from common.cached_params import CachedParams
 from common.params import Params
@@ -49,7 +49,7 @@ class CarController(CarControllerBase):
     self.last_aolc_ready = False
     self.last_personality = None
 
-    self.long_controller = LongCarController(self.CP, self.params, self.packer)
+    self.long_controller = LongCarControllerV1(self.CP, self.params, self.packer)
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
