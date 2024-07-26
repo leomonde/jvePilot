@@ -98,7 +98,6 @@ class LongCarControllerV3(LongCarController):
       aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
 
     vTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
-    vfTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
     long_stopping = CC.actuators.longControlState == LongCtrlState.stopping
 
     under_accel_frame_count = 0
@@ -113,7 +112,7 @@ class LongCarControllerV3(LongCarController):
         self.last_brake = None
 
       currently_braking = self.last_brake is not None
-      speed_to_far_off = abs(CS.out.vEgo - vfTarget) > COAST_WINDOW
+      speed_to_far_off = abs(CS.out.vEgo - vTarget) > COAST_WINDOW
       allow_smart_slowing = not speed_to_far_off and CS.out.vEgo > LOW_WINDOW
       engine_brake = allow_smart_slowing and TORQ_BRAKE_MAX < aTarget < 0 \
                      and self.torque(CC, CS, aTarget, vTarget) + self.torq_adjust > CS.torqMin
@@ -207,16 +206,16 @@ class LongCarControllerV3(LongCarController):
     return force_parallel + force_perpendicular
 
   def calc_drag_force(self, engine_torque, transmission_gear, road_pitch, aEgo, vEgo, wind=0):
+    force_drag = 0.5 * CdA * AIR_DENSITY * ((vEgo - wind) ** 2)
+
     if vEgo < LOW_WINDOW:
       # https://x-engineer.org/rolling-resistance/
       force_rolling = ROLLING_RESISTANCE_COEFF * self.vehicleMass * GRAVITY
       # https://x-engineer.org/aerodynamic-drag/
-      force_drag = 0.5 * CdA * AIR_DENSITY * ((vEgo - wind) ** 2)
       return force_rolling + force_drag
 
-    return 0
-    #total_force = engine_torque * self.finalDriveRatios[transmission_gear - 1] / WHEEL_RADIUS
-    #return total_force - self.calc_motion_force(aEgo, road_pitch)
+    total_force = engine_torque * self.finalDriveRatios[transmission_gear - 1] / WHEEL_RADIUS
+    return total_force - self.calc_motion_force(aEgo, road_pitch) + force_drag
 
   def calc_engine_torque(self, accel, pitch, transmission_gear, drag_force):
     force_total = self.calc_motion_force(accel, pitch) + drag_force
@@ -229,7 +228,7 @@ class LongCarControllerV3(LongCarController):
     pitch = CC.orientationNED[1] if len(CC.orientationNED) > 1 else 0
     drag_force = self.calc_drag_force(CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
     force = (self.vehicleMass * aTarget) + drag_force
-    return (force * vTarget) / (.105 * CS.gasRpm)
+    return (force * vTarget) / (CS.gasRpm / self.finalDriveRatios[int(CS.transmission_gear) - 1])
     #return self.calc_engine_torque(aTarget, pitch, CS.transmission_gear, drag_force)
 
   def acc_gas(self, CC, CS, frame, aTarget, vTarget, under_accel_frame_count):
