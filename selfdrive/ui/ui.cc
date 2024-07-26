@@ -220,8 +220,8 @@ static void update_state(UIState *s) {
     scene.accEco = sm["jvePilotState"].getJvePilotUIState().getAccEco();
   }
   if (sm.updated("carState")) {
-    scene.longControl = sm["carState"].getJvePilotCarState().getCarState().getLongControl();
-    scene.cruiseEnabled = sm["carState"].getCruiseState().getEnabled();
+    scene.longControl = sm["carState"].getCarState().getJvePilotCarState().getCarState().getLongControl();
+    scene.cruiseEnabled = sm["carState"].getCarState().getCruiseState().getEnabled();
   }
 }
 
