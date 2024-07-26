@@ -163,7 +163,7 @@ class LongCarControllerV3(LongCarController):
       if self.torq_adjust > 0:
         will_be_slowing = aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
         if will_be_slowing:  # going to not need it
-          self.torq_adjust = max(0, self.torq_adjust - longitudinalPlan.accels[-1])
+          self.torq_adjust = max(0, self.torq_adjust + longitudinalPlan.accels[-1] * 10)
         elif aTarget < 0:  # not needed
           self.torq_adjust = max(0, self.torq_adjust - max(aTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
         elif CS.out.aEgo > aTarget:  # Too much
@@ -214,8 +214,9 @@ class LongCarControllerV3(LongCarController):
       # https://x-engineer.org/aerodynamic-drag/
       return force_rolling + force_drag
 
-    total_force = engine_torque * self.finalDriveRatios[transmission_gear - 1] / WHEEL_RADIUS
-    return total_force - self.calc_motion_force(aEgo, road_pitch) + force_drag
+    return force_drag
+    #total_force = engine_torque * self.finalDriveRatios[transmission_gear - 1] / WHEEL_RADIUS
+    #return total_force - self.calc_motion_force(aEgo, road_pitch)
 
   def calc_engine_torque(self, accel, pitch, transmission_gear, drag_force):
     force_total = self.calc_motion_force(accel, pitch) + drag_force
