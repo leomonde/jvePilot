@@ -7,7 +7,7 @@ from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParam
 from openpilot.selfdrive.car.interfaces import CarControllerBase
 
 from openpilot.selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
-from openpilot.selfdrive.car.chrysler.long_carcontroller_v3 import LongCarController
+from openpilot.selfdrive.car.chrysler.long_carcontroller import LongCarController
 from common.conversions import Conversions as CV
 from common.cached_params import CachedParams
 from common.params import Params
