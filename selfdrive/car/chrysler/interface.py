@@ -2,7 +2,7 @@
 from cereal import car
 from panda import Panda
 from openpilot.selfdrive.car import get_safety_config
-from openpilot.selfdrive.car.chrysler.values import CAR, RAM_HD, RAM_DT, RAM_CARS, ChryslerFlags
+from openpilot.selfdrive.car.chrysler.values import CAR, DBC, RAM_HD, RAM_DT, RAM_CARS, ChryslerFlags
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from common.params import Params
 
@@ -37,7 +37,7 @@ class CarInterface(CarInterfaceBase):
     ret.dashcamOnly = candidate in RAM_HD
 
     # radar parsing needs some work, see https://github.com/commaai/openpilot/issues/26842
-    ret.radarUnavailable = False
+    ret.radarUnavailable = DBC[candidate]['radar'] is None
     ret.steerActuatorDelay = 0.1
     ret.steerLimitTimer = 0.4
 
