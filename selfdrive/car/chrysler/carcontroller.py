@@ -133,6 +133,8 @@ class CarController(CarControllerBase):
         self.last_personality = personality
         self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
 
+    self.long_controller.acc(self.sm['longitudinalPlan'], self.frame, CC, CS, can_sends)
+
     self.frame += 1
 
     new_actuators = CC.actuators.as_builder()
