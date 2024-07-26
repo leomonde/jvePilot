@@ -4,7 +4,6 @@ from openpilot.selfdrive.car import button_pressed
 
 ButtonType = car.CarState.ButtonEvent.Type
 
-
 class LongCarController:
   def __init__(self, CP, params, packer):
     self.CP = CP
