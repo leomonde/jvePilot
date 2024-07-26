@@ -21,6 +21,8 @@ private:
   int pedalPressedAmount;
   int accEco;
   bool autoFollowEnabled;
+  bool longControl;
+  bool cruiseEnabled;
   const int radius = 192;
   const int img_size = (radius / 2) * 1.5;
 

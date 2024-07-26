@@ -113,7 +113,8 @@ typedef struct UIScene {
   // jvePilot
   int autoFollowEnabled = -1;
   int accEco = -1;
-  bool use_lane_lines;
+  bool longControl = false;
+  bool cruiseEnabled = false;
 
   QRect accEco_btn;
 } UIScene;

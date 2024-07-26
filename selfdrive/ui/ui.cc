@@ -219,6 +219,10 @@ static void update_state(UIState *s) {
     scene.autoFollowEnabled = sm["jvePilotState"].getJvePilotUIState().getAutoFollow() ? 1 : 0;
     scene.accEco = sm["jvePilotState"].getJvePilotUIState().getAccEco();
   }
+  if (sm.updated("carState")) {
+    scene.longControl = sm["carState"].getJvePilotCarState().getCarState().getLongControl();
+    scene.cruiseEnabled = sm["carState"].getCruiseState().getEnabled();
+  }
 }
 
 void ui_update_params(UIState *s) {
