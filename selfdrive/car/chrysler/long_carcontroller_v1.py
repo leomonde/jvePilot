@@ -167,7 +167,6 @@ class LongCarControllerV1(LongCarController):
                                                CS.das_3))
     can_sends.append(chryslercan.das_5_command(self.packer,
                                                2 if counter_das_5_changed else 3,
-                                               go_req,
                                                torque,
                                                CS.das_5))
 
