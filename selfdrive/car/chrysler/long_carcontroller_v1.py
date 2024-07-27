@@ -26,6 +26,10 @@ TORQ_BRAKE_MAX = -0.1
 BRAKE_CHANGE = 0.06
 
 ## COMMA
+TIRE_SIZE = [275, 55, 20] # 275/55R20
+# https://x-engineer.org/calculate-wheel-radius/
+WHEEL_RADIUS = 0.95 * ((TIRE_SIZE[2] * 25.4 / 2) + (TIRE_SIZE[0] * TIRE_SIZE[1] / 100)) / 1000
+WHEEL_CIRCUMFERENCE = math.tau * WHEEL_RADIUS
 # https://web.archive.org/web/20180116135154/https://www.ramtrucks.com/2019/ram-1500.html
 CdA = 13.0 / 10.764 # CdA = frontal drag coefficient x area (ft^2 converted to m^2)
 # https://www.epa.gov/compliance-and-fuel-economy-data/data-cars-used-testing-fuel-economy
@@ -48,12 +52,11 @@ class LongCarControllerV1(LongCarController):
 
     self.finalDriveRatios = [x * CP.axleRatio for x in CP.gearRatios]
 
+  def torqRange(self, CS):
+    return CS.wheelTorqMin if self.hybrid else CS.torqMin, CS.wheelTorqMax if self.hybrid else CS.torqMax
 
   # T = (mass x accel x velocity x 1000)/(.105 x Engine rpm)
   def acc(self, longitudinalPlan, frame, CC, CS, can_sends):
-    counter_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
-    self.last_das_3_counter = CS.das_3['COUNTER']
-
     if not CC.enabled or not CS.longControl:
       self.torq_adjust = 0
       self.last_brake = None
@@ -68,6 +71,7 @@ class LongCarControllerV1(LongCarController):
     else:
       aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
 
+    torqMin, torqMax = self.torqRange(CS)
     vTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
     long_stopping = CC.actuators.longControlState == LongCtrlState.stopping
 
@@ -86,7 +90,7 @@ class LongCarControllerV1(LongCarController):
       speed_to_far_off = abs(CS.out.vEgo - vTarget) > COAST_WINDOW
       allow_smart_slowing = not speed_to_far_off and CS.out.vEgo > LOW_WINDOW
       engine_brake = allow_smart_slowing and TORQ_BRAKE_MAX < aTarget < 0 \
-                     and self.torque(CC, CS, aTarget, vTarget) + self.torq_adjust > CS.torqMin
+                     and self.torque(CC, CS, aTarget, vTarget) + self.torq_adjust > torqMin
 
       if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking):  # gas
         under_accel_frame_count = self.acc_gas(CC, CS, frame, aTarget, vTarget, under_accel_frame_count)
@@ -101,7 +105,7 @@ class LongCarControllerV1(LongCarController):
 
       elif self.last_torque is not None:  # let up on gas
         self.last_torque -= TORQ_RELEASE_CHANGE
-        if self.last_torque <= max(0, CS.torqMin):
+        if self.last_torque <= max(0, torqMin):
           self.last_torque = None
 
       if stop_req:
@@ -143,7 +147,7 @@ class LongCarControllerV1(LongCarController):
     elif under_accel_frame_count > CAN_DOWNSHIFT_ACCEL_FRAMES:
       if CS.out.vEgo < vTarget - COAST_WINDOW / CarInterface.accel_max(CS) \
           and CS.out.aEgo < CarInterface.accel_max(CS) / 5 \
-          and torque > CS.torqMax * 0.98:  # Time to downshift?
+          and torque > torqMax * 0.98:  # Time to downshift?
         if CS.transmission_gear > 3 and CS.gasRpm < 4500:
           self.max_gear = CS.transmission_gear - 1
           under_accel_frame_count = 0
@@ -154,20 +158,24 @@ class LongCarControllerV1(LongCarController):
 
     brake_prep = brake is not None and len(longitudinalPlan.accels) and longitudinalPlan.accels[0] - longitudinalPlan.accels[-1] > 1.0
 
-    can_sends.append(chryslercan.acc_command(self.packer,
-                                             2 if counter_changed else 3,
-                                             go_req,
-                                             torque,
-                                             self.max_gear,
-                                             stop_req and not fidget_stopped_brake_frame,
-                                             brake,
-                                             brake_prep,
-                                             CS.das_3))
-
-  def calc_motion_force(self, aEgo, road_pitch):
-    force_parallel = self.vehicleMass * aEgo
-    force_perpendicular = self.vehicleMass * GRAVITY * math.sin(road_pitch)
-    return force_parallel + force_perpendicular
+    counter_das_3_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
+    self.last_das_3_counter = CS.das_3['COUNTER']
+    can_sends.append(chryslercan.das_3_command(self.packer,
+                                               2 if counter_das_3_changed else 3,
+                                               go_req,
+                                               torque,
+                                               self.max_gear,
+                                               stop_req and not fidget_stopped_brake_frame,
+                                               brake,
+                                               brake_prep,
+                                               CS.das_3))
+    if self.hybrid:
+      counter_das_5_changed = CS.das_5['COUNTER'] != self.last_das_5_counter
+      self.last_das_5_counter = CS.das_5['COUNTER']
+      can_sends.append(chryslercan.das_5_command(self.packer,
+                                                 2 if counter_das_5_changed else 3,
+                                                 torque,
+                                                 CS.das_5))
 
   def calc_drag_force(self, engine_torque, transmission_gear, road_pitch, aEgo, vEgo, wind=0):
     force_drag = 0.5 * CdA * AIR_DENSITY * ((vEgo - wind) ** 2)
@@ -184,9 +192,16 @@ class LongCarControllerV1(LongCarController):
     pitch = CC.orientationNED[1] if len(CC.orientationNED) > 1 else 0
     drag_force = self.calc_drag_force(CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
     force = (self.vehicleMass * aTarget) + drag_force
-    return (force * vTarget) / (CS.gasRpm / self.finalDriveRatios[int(CS.transmission_gear) - 1])
+    if self.hybrid:
+      axle_rpm = CS.out.vEgo / WHEEL_CIRCUMFERENCE
+      #return (force * vTarget) / (axle_rpm * math.tau)
+    else:
+      axle_rpm = CS.gasRpm / self.finalDriveRatios[int(CS.transmission_gear) - 1]
+
+    return (force * vTarget) / axle_rpm
 
   def acc_gas(self, CC, CS, frame, aTarget, vTarget, under_accel_frame_count):
+    torqMin, torqMax = self.torqRange(CS)
     accelerating = aTarget > 0 and vTarget > CS.out.vEgo + SLOW_WINDOW
     if accelerating:
       vSmoothTarget = vTarget
@@ -204,11 +219,11 @@ class LongCarControllerV1(LongCarController):
         if frame - self.under_accel_frame_count > START_ADJUST_ACCEL_FRAMES:
           self.torq_adjust += offset * (CarInterface.accel_max(CS) / CarInterface.ACCEL_MAX)
 
-    if cruise + self.torq_adjust > CS.torqMax:  # keep the adjustment in check
-      self.torq_adjust = max(0, CS.torqMax - cruise)
+    if cruise + self.torq_adjust > torqMax:  # keep the adjustment in check
+      self.torq_adjust = max(0, torqMax - cruise)
 
     torque = cruise + self.torq_adjust
-    self.last_torque = max(CS.torqMin + 1, min(CS.torqMax, torque))
+    self.last_torque = max(torqMin + 1, min(torqMax, torque))
 
     return under_accel_frame_count
 
