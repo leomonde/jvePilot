@@ -29,7 +29,7 @@ BRAKE_CHANGE = 0.06
 TIRE_SIZE = [275, 55, 20] # 275/55R20
 # https://x-engineer.org/calculate-wheel-radius/
 WHEEL_RADIUS = 0.95 * ((TIRE_SIZE[2] * 25.4 / 2) + (TIRE_SIZE[0] * TIRE_SIZE[1] / 100)) / 1000
-WHEEL_CIRCUMFERENCE = 2 * 3.1415 * WHEEL_RADIUS
+WHEEL_CIRCUMFERENCE = math.tau * WHEEL_RADIUS
 # https://web.archive.org/web/20180116135154/https://www.ramtrucks.com/2019/ram-1500.html
 CdA = 13.0 / 10.764 # CdA = frontal drag coefficient x area (ft^2 converted to m^2)
 # https://www.epa.gov/compliance-and-fuel-economy-data/data-cars-used-testing-fuel-economy
@@ -193,7 +193,12 @@ class LongCarControllerV1(LongCarController):
     pitch = CC.orientationNED[1] if len(CC.orientationNED) > 1 else 0
     drag_force = self.calc_drag_force(CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
     force = (self.vehicleMass * aTarget) + drag_force
-    axle_rpm = CS.out.vEgo / WHEEL_CIRCUMFERENCE if self.hybrid else CS.gasRpm / self.finalDriveRatios[int(CS.transmission_gear) - 1]
+    if self.hybrid:
+      axle_rpm = CS.out.vEgo / WHEEL_CIRCUMFERENCE
+      #return (force * vTarget) / (axle_rpm * math.tau)
+    else:
+      axle_rpm = CS.gasRpm / self.finalDriveRatios[int(CS.transmission_gear) - 1]
+
     return (force * vTarget) / axle_rpm
 
   def acc_gas(self, CC, CS, frame, aTarget, vTarget, under_accel_frame_count):
