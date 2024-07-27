@@ -58,6 +58,8 @@ def create_lkas_command(packer, CP, apply_steer, lkas_control_bit):
   # LKAS_COMMAND Lane-keeping signal to turn the wheel
   enabled_val = 2 if CP.carFingerprint in RAM_CARS else 1
   values = {
+    "WP_CONTROL": 1,
+    "WP_ACTIVE": 1,
     "STEERING_TORQUE": apply_steer,
     "LKAS_CONTROL_BIT": enabled_val if lkas_control_bit else 0,
   }
