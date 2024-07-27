@@ -158,17 +158,18 @@ class LongCarControllerV1(LongCarController):
 
     can_sends.append(chryslercan.das_3_command(self.packer,
                                                2 if counter_das_3_changed else 3,
-                                               False,
-                                               None,
+                                               go_req,
+                                               torque,
                                                self.max_gear,
                                                stop_req and not fidget_stopped_brake_frame,
                                                brake,
                                                brake_prep,
                                                CS.das_3))
-    can_sends.append(chryslercan.das_5_command(self.packer,
-                                               2 if counter_das_5_changed else 3,
-                                               torque,
-                                               CS.das_5))
+    if self.hybrid:
+      can_sends.append(chryslercan.das_5_command(self.packer,
+                                                 2 if counter_das_5_changed else 3,
+                                                 torque,
+                                                 CS.das_5))
 
   def calc_motion_force(self, aEgo, road_pitch):
     force_parallel = self.vehicleMass * aEgo
