@@ -1,6 +1,7 @@
 from cereal import car
 from common.params import Params
 from openpilot.selfdrive.car import button_pressed
+from openpilot.selfdrive.car.chrysler.values import HYBRID_CARS
 
 ButtonType = car.CarState.ButtonEvent.Type
 
@@ -10,6 +11,8 @@ class LongCarController:
     self.params = params
     self.packer = packer
     self.last_das_3_counter = -1
+    self.last_das_5_counter = -1
+    self.hybrid = CP.carFingerprint in HYBRID_CARS
 
     self.settingsParams = Params()
 
