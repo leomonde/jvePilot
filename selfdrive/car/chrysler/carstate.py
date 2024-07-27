@@ -3,7 +3,7 @@ from openpilot.common.conversions import Conversions as CV
 from opendbc.can.parser import CANParser
 from opendbc.can.can_define import CANDefine
 from openpilot.selfdrive.car.interfaces import CarStateBase
-from openpilot.selfdrive.car.chrysler.values import DBC, STEER_THRESHOLD, RAM_CARS
+from openpilot.selfdrive.car.chrysler.values import DBC, STEER_THRESHOLD, HYBRID_CARS, RAM_CARS
 
 import numpy as np
 from common.params import Params
@@ -126,11 +126,12 @@ class CarState(CarStateBase):
       ret.accFaulted = False
       self.torqMin = cp.vl["DAS_3"]["ENGINE_TORQUE_REQUEST"]
       self.torqMax = cp.vl["ECM_TRQ"]["ENGINE_TORQ_MAX"]
-      self.wheelTorqMin = cp.vl["AXLE_TORQ"]["AXLE_TORQ_MIN"]
-      self.wheelTorqMax = cp.vl["AXLE_TORQ"]["AXLE_TORQ_MAX"]
       self.transmission_gear = int(cp.vl['TCM_A7']["CurrentGear"])
       self.gasRpm = cp.vl["ECM_1"]["ENGINE_RPM"]
       self.engine_torque = cp.vl["ECM_1"]["ENGINE_TORQUE"]
+      if self.CP.carFingerprint in HYBRID_CARS:
+        self.wheelTorqMin = cp.vl["AXLE_TORQ"]["AXLE_TORQ_MIN"]
+        self.wheelTorqMax = cp.vl["AXLE_TORQ"]["AXLE_TORQ_MAX"]
     else:
       self.longEnabled = False
       ret.jvePilotCarState.longControl = False
@@ -142,8 +143,9 @@ class CarState(CarStateBase):
       ret.accFaulted = cp_cruise.vl["DAS_3"]["ACC_FAULTED"] != 0
 
     self.das_3 = cp.vl['DAS_3']
-    self.das_5 = cp.vl['DAS_5']
     self.lkasHeartbit = cp_cam.vl["LKAS_HEARTBIT"]
+    if self.CP.carFingerprint in HYBRID_CARS:
+      self.das_5 = cp.vl['DAS_5']
 
     if self.CP.carFingerprint in RAM_CARS:
       # Auto High Beam isn't Located in this message on chrysler or jeep currently located in 729 message
@@ -204,6 +206,14 @@ class CarState(CarStateBase):
     return messages
 
   @staticmethod
+  def get_hybrid_messages():
+    messages = [
+      ("DAS_5", 50),
+      ("AXLE_TORQ", 50),
+    ]
+    return messages
+
+  @staticmethod
   def get_can_parser(CP):
     messages = [
       # sig_address, frequency
@@ -223,11 +233,13 @@ class CarState(CarStateBase):
       ("ECM_1", 50),
       ("ECM_TRQ", 50),
       ("TCM_A7", 50),
-      ("AXLE_TORQ", 50),
     ]
 
     if CP.enableBsm:
       messages.append(("BSM_1", 2))
+
+    if CP.carFingerprint in HYBRID_CARS:
+      messages += CarState.get_hybrid_messages()
 
     if CP.carFingerprint in RAM_CARS:
       messages += [
