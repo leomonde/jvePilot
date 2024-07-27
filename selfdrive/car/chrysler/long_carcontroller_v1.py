@@ -193,12 +193,10 @@ class LongCarControllerV1(LongCarController):
     drag_force = self.calc_drag_force(CS.engine_torque, CS.transmission_gear, pitch, CS.out.aEgo, CS.out.vEgo)
     force = (self.vehicleMass * aTarget) + drag_force
     if self.hybrid:
-      axle_rpm = CS.out.vEgo / WHEEL_CIRCUMFERENCE
-      #return (force * vTarget) / (axle_rpm * math.tau)
+      return force * WHEEL_RADIUS
     else:
       axle_rpm = CS.gasRpm / self.finalDriveRatios[int(CS.transmission_gear) - 1]
-
-    return (force * vTarget) / axle_rpm
+      return (force * vTarget) / axle_rpm
 
   def acc_gas(self, CC, CS, frame, aTarget, vTarget, under_accel_frame_count):
     torqMin, torqMax = self.torqRange(CS)
