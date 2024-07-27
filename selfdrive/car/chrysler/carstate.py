@@ -56,6 +56,8 @@ class CarState(CarStateBase):
     self.allowLong = True # CP.carFingerprint in (CAR.JEEP_CHEROKEE, CAR.JEEP_CHEROKEE_2019)
     self.torqMin = None
     self.torqMax = None
+    self.wheelTorqMin = None
+    self.wheelTorqMax = None
     self.transmission_gear = None
     self.engine_torque = None
 
@@ -124,6 +126,8 @@ class CarState(CarStateBase):
       ret.accFaulted = False
       self.torqMin = cp.vl["DAS_3"]["ENGINE_TORQUE_REQUEST"]
       self.torqMax = cp.vl["ECM_TRQ"]["ENGINE_TORQ_MAX"]
+      self.wheelTorqMin = cp.vl["AXLE_TORQ"]["AXLE_TORQ_MIN"]
+      self.wheelTorqMax = cp.vl["AXLE_TORQ"]["AXLE_TORQ_MAX"]
       self.transmission_gear = int(cp.vl['TCM_A7']["CurrentGear"])
       self.gasRpm = cp.vl["ECM_1"]["ENGINE_RPM"]
       self.engine_torque = cp.vl["ECM_1"]["ENGINE_TORQUE"]
@@ -194,7 +198,6 @@ class CarState(CarStateBase):
   def get_cruise_messages():
     messages = [
       ("DAS_3", 50),
-      ("DAS_5", 50),
       ("DAS_4", 50),
     ]
     return messages
@@ -219,6 +222,7 @@ class CarState(CarStateBase):
       ("ECM_1", 50),
       ("ECM_TRQ", 50),
       ("TCM_A7", 50),
+      ("AXLE_TORQ", 50),
     ]
 
     if CP.enableBsm:
