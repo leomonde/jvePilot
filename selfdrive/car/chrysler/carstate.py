@@ -222,6 +222,7 @@ class CarState(CarStateBase):
       ("ECM_1", 50),
       ("ECM_TRQ", 50),
       ("TCM_A7", 50),
+      ("DAS_5", 50),
       ("AXLE_TORQ", 50),
     ]
 
