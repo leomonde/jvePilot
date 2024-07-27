@@ -51,8 +51,10 @@ class LongCarControllerV1(LongCarController):
 
   # T = (mass x accel x velocity x 1000)/(.105 x Engine rpm)
   def acc(self, longitudinalPlan, frame, CC, CS, can_sends):
-    counter_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
+    counter_das_3_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
     self.last_das_3_counter = CS.das_3['COUNTER']
+    counter_das_5_changed = CS.das_5['COUNTER'] != self.last_das_5_counter
+    self.last_das_5_counter = CS.das_5['COUNTER']
 
     if not CC.enabled or not CS.longControl:
       self.torq_adjust = 0
@@ -154,15 +156,20 @@ class LongCarControllerV1(LongCarController):
 
     brake_prep = brake is not None and len(longitudinalPlan.accels) and longitudinalPlan.accels[0] - longitudinalPlan.accels[-1] > 1.0
 
-    can_sends.append(chryslercan.acc_command(self.packer,
-                                             2 if counter_changed else 3,
-                                             go_req,
-                                             torque,
-                                             self.max_gear,
-                                             stop_req and not fidget_stopped_brake_frame,
-                                             brake,
-                                             brake_prep,
-                                             CS.das_3))
+    can_sends.append(chryslercan.das_3_command(self.packer,
+                                               2 if counter_das_3_changed else 3,
+                                               False,
+                                               None,
+                                               self.max_gear,
+                                               stop_req and not fidget_stopped_brake_frame,
+                                               brake,
+                                               brake_prep,
+                                               CS.das_3))
+    can_sends.append(chryslercan.das_5_command(self.packer,
+                                               2 if counter_das_5_changed else 3,
+                                               go_req,
+                                               torque,
+                                               CS.das_5))
 
   def calc_motion_force(self, aEgo, road_pitch):
     force_parallel = self.vehicleMass * aEgo

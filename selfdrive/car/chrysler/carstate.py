@@ -49,6 +49,7 @@ class CarState(CarStateBase):
     self.longControl = False
     self.cachedParams = CachedParams()
     self.das_3 = None
+    self.das_5 = None
     self.longEnabled = False
     self.longControl = False
     self.gasRpm = None
@@ -137,6 +138,7 @@ class CarState(CarStateBase):
       ret.accFaulted = cp_cruise.vl["DAS_3"]["ACC_FAULTED"] != 0
 
     self.das_3 = cp.vl['DAS_3']
+    self.das_5 = cp.vl['DAS_5']
     self.lkasHeartbit = cp_cam.vl["LKAS_HEARTBIT"]
 
     if self.CP.carFingerprint in RAM_CARS:
@@ -192,6 +194,7 @@ class CarState(CarStateBase):
   def get_cruise_messages():
     messages = [
       ("DAS_3", 50),
+      ("DAS_5", 50),
       ("DAS_4", 50),
     ]
     return messages

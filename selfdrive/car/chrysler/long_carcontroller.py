@@ -10,6 +10,7 @@ class LongCarController:
     self.params = params
     self.packer = packer
     self.last_das_3_counter = -1
+    self.last_das_5_counter = -1
 
     self.settingsParams = Params()
 
