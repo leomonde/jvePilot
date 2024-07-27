@@ -57,11 +57,6 @@ class LongCarControllerV1(LongCarController):
 
   # T = (mass x accel x velocity x 1000)/(.105 x Engine rpm)
   def acc(self, longitudinalPlan, frame, CC, CS, can_sends):
-    counter_das_3_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
-    self.last_das_3_counter = CS.das_3['COUNTER']
-    counter_das_5_changed = CS.das_5['COUNTER'] != self.last_das_5_counter
-    self.last_das_5_counter = CS.das_5['COUNTER']
-
     if not CC.enabled or not CS.longControl:
       self.torq_adjust = 0
       self.last_brake = None
@@ -163,6 +158,8 @@ class LongCarControllerV1(LongCarController):
 
     brake_prep = brake is not None and len(longitudinalPlan.accels) and longitudinalPlan.accels[0] - longitudinalPlan.accels[-1] > 1.0
 
+    counter_das_3_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
+    self.last_das_3_counter = CS.das_3['COUNTER']
     can_sends.append(chryslercan.das_3_command(self.packer,
                                                2 if counter_das_3_changed else 3,
                                                go_req,
@@ -173,6 +170,8 @@ class LongCarControllerV1(LongCarController):
                                                brake_prep,
                                                CS.das_3))
     if self.hybrid:
+      counter_das_5_changed = CS.das_5['COUNTER'] != self.last_das_5_counter
+      self.last_das_5_counter = CS.das_5['COUNTER']
       can_sends.append(chryslercan.das_5_command(self.packer,
                                                  2 if counter_das_5_changed else 3,
                                                  torque,
