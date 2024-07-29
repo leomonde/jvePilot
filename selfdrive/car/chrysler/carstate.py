@@ -208,7 +208,6 @@ class CarState(CarStateBase):
   @staticmethod
   def get_hybrid_messages():
     messages = [
-      ("DAS_5", 50),
       ("AXLE_TORQ", 50),
     ]
     return messages
