@@ -143,9 +143,8 @@ class CarState(CarStateBase):
       ret.accFaulted = cp_cruise.vl["DAS_3"]["ACC_FAULTED"] != 0
 
     self.das_3 = cp.vl['DAS_3']
+    self.das_5 = cp.vl['DAS_5']
     self.lkasHeartbit = cp_cam.vl["LKAS_HEARTBIT"]
-    if self.CP.carFingerprint in HYBRID_CARS:
-      self.das_5 = cp.vl['DAS_5']
 
     if self.CP.carFingerprint in RAM_CARS:
       # Auto High Beam isn't Located in this message on chrysler or jeep currently located in 729 message
@@ -208,7 +207,6 @@ class CarState(CarStateBase):
   @staticmethod
   def get_hybrid_messages():
     messages = [
-      ("DAS_5", 50),
       ("AXLE_TORQ", 50),
     ]
     return messages
