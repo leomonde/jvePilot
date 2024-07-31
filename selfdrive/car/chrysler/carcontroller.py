@@ -46,8 +46,9 @@ class CarController(CarControllerBase):
     self.autoFollowDistanceLock = None
     self.button_frame = 0
     self.last_target = 0
-    self.last_aolc_ready = False
     self.last_personality = None
+    self.low_steer = not self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED
+    self.steer_gap = 0.5 if self.CP.carFingerprint in RAM_CARS else 3.0
 
     self.long_controller = LongCarControllerV1(self.CP, self.params, self.packer)
 
@@ -89,40 +90,33 @@ class CarController(CarControllerBase):
     # steering
     new_steer = int(round(CC.actuators.steer * self.params.STEER_MAX))
     if self.frame % self.params.STEER_STEP == 0 or abs(new_steer - int(self.apply_steer_last) > self.cachedParams.get_float('jvePilot.settings.steer.chillLevel', 1000)):
-      # TODO: can we make this more sane? why is it different for all the cars?
-      high_steer = self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED
       lkas_control_bit = self.lkas_control_bit_prev
-      if self.steerNoMinimum:
-        lkas_control_bit = CC.latActive or not high_steer  # never turn off vehicles that can already low steer
-      elif CS.out.vEgo > self.CP.minSteerSpeed:
+      if CS.out.vEgo > self.CP.minSteerSpeed or self.steerNoMinimum:
+        lkas_control_bit = CC.latActive
+      elif CS.out.vEgo < (self.CP.minSteerSpeed - self.steer_gap):
+        lkas_control_bit = False
+
+      if self.low_steer and self.lkas_control_bit_prev:
+        # low steer vehicles never turn this off
         lkas_control_bit = True
-      elif high_steer:
-        if CS.out.vEgo < (self.CP.minSteerSpeed - 3.0):
-          lkas_control_bit = False
-      elif self.CP.carFingerprint in RAM_CARS:
-        if CS.out.vEgo < (self.CP.minSteerSpeed - 0.5):
-          lkas_control_bit = False
+      else:
+        # EPS faults if LKAS enables too quickly
+        if lkas_control_bit and self.lkas_control_bit_prev != lkas_control_bit:
+          if self.next_lkas_control_change == 0:
+            self.next_lkas_control_change = self.frame + 70
+        else:
+          self.next_lkas_control_change = 0
+        lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
 
-      if not self.lkas_control_bit_prev and CC.jvePilotState.carControl.aolcAvailable and CC.jvePilotState.carControl.aolcAvailable != self.last_aolc_ready:
-        self.next_lkas_control_change = self.frame + 70
-      self.last_aolc_ready = CC.jvePilotState.carControl.aolcAvailable
-
-      # EPS faults if LKAS re-enables too quickly
-      lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
-
-      if not lkas_control_bit and self.lkas_control_bit_prev:
-        self.next_lkas_control_change = self.frame + 200
       self.lkas_control_bit_prev = lkas_control_bit
 
-      # steer torque
-      apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
-
-      if not CC.latActive or not lkas_control_bit:
-        apply_steer = 0
+      apply_steer = 0
+      if CC.latActive and lkas_control_bit:
+        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
 
       self.apply_steer_last = apply_steer
 
-      can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
+      can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit, self.steerNoMinimum, CC.latActive))
 
     if CC.enabled:
       # auto set profile
