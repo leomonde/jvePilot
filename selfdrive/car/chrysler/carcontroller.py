@@ -102,10 +102,11 @@ class CarController(CarControllerBase):
       else:
         # EPS faults if LKAS enables too quickly
         if lkas_control_bit and self.lkas_control_bit_prev != lkas_control_bit:
-          self.next_lkas_control_change = self.frame + 70
+          if self.next_lkas_control_change == 0:
+            self.next_lkas_control_change = self.frame + 70
+        else:
+          self.next_lkas_control_change = 0
         lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
-
-      self.lkas_control_bit_prev = lkas_control_bit
 
       apply_steer = 0
       if CC.latActive and lkas_control_bit:
