@@ -218,7 +218,7 @@ class CarState(CarStateBase):
       ("ESP_1", 50),
       ("EPS_2", 100),
       ("ESP_6", 50),
-      ("STEERING", 100),
+      ("STEERING", 50),
       ("ECM_5", 50),
       ("CRUISE_BUTTONS", 50),
       ("STEERING_LEVERS", 10),
