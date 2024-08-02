@@ -54,10 +54,12 @@ def create_lkas_hud(packer, CP, lat_active, hud_alert, hud_count, car_model, aut
   return packer.make_can_msg("DAS_6", 0, values)
 
 
-def create_lkas_command(packer, CP, apply_steer, lkas_control_bit):
+def create_lkas_command(packer, CP, apply_steer, lkas_control_bit, wp_control, wp_active):
   # LKAS_COMMAND Lane-keeping signal to turn the wheel
   enabled_val = 2 if CP.carFingerprint in RAM_CARS else 1
   values = {
+    "WP_CONTROL": 1 if wp_control else 0,
+    "WP_ACTIVE": 1 if wp_active else 0,
     "STEERING_TORQUE": apply_steer,
     "LKAS_CONTROL_BIT": enabled_val if lkas_control_bit else 0,
   }
@@ -80,3 +82,48 @@ def create_wheel_buttons_command(packer, bus, frame, buttons):
       values[b] = 1
 
   return packer.make_can_msg("CRUISE_BUTTONS", bus, values)
+
+def das_3_command(packer, counter_offset, go, gas, max_gear, stop, brake, brake_prep, das_3):
+  values = das_3.copy()  # forward what we parsed
+  values['ACC_AVAILABLE'] = 1
+  values['ACC_ACTIVE'] = 1
+  values['COUNTER'] = (das_3['COUNTER'] + counter_offset) % 0x10
+
+  if go is not None:
+    values['ACC_GO'] = go
+
+  if stop is not None:
+    values['ACC_STANDSTILL'] = stop
+
+  if brake is not None:
+    values['ACC_DECEL_REQ'] = 1
+    values['ACC_DECEL'] = brake
+    values['ACC_BRK_PREP'] = brake_prep
+
+  if gas is not None:
+    values['ENGINE_TORQUE_REQUEST_MAX'] = 1
+    values['ENGINE_TORQUE_REQUEST'] = gas
+
+  if max_gear is not None:
+    values['GR_MAX_REQ'] = max_gear
+
+  return packer.make_can_msg("DAS_3", 0, values)
+
+def das_5_command(packer, counter_offset, gas, das_5):
+  values = das_5.copy()  # forward what we parsed
+  values['COUNTER'] = (das_5['COUNTER'] + counter_offset) % 0x10
+
+  if gas is not None:
+    values['WHEEL_TORQUE_REQUEST_ACTIVE'] = 1
+    values['WHEEL_TORQUE_REQUEST'] = gas
+
+  return packer.make_can_msg("DAS_5", 0, values)
+
+def acc_log(packer, adjustment, aTarget, vTarget, aEgo):
+  values = {
+    'OP_A_TARGET': aTarget,
+    'OP_V_TARGET': vTarget,
+    'ADJUSTMENT': adjustment,
+    'A_EGO': aEgo
+  }
+  return packer.make_can_msg("ACC_LOG", 0, values)

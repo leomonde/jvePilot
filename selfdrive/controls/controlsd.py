@@ -630,7 +630,7 @@ class Controls:
 
     if not self.joystick_mode:
       # accel PID loop
-      pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, self.v_cruise_helper.v_cruise_kph * CV.KPH_TO_MS)
+      pid_accel_limits = self.CI.get_pid_accel_limits(self.CI.CS, self.CP, CS.vEgo, self.v_cruise_helper.v_cruise_kph * CV.KPH_TO_MS)
       t_since_plan = (self.sm.frame - self.sm.recv_frame['longitudinalPlan']) * DT_CTRL
       actuators.accel = self.LoC.update(CC.longActive, CS, long_plan, pid_accel_limits, t_since_plan)
 
@@ -908,6 +908,7 @@ class Controls:
       self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
       self.personality = self.read_personality_param()
       self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
+      self.acc_eco = int(self.params.get('jvePilot.carState.accEco', encoding='utf8') or "1")
       self.device_offset = float(self.params.get('jvePilot.settings.deviceOffset'))
       self.lkas_button_light = self.params.get_bool("jvePilot.settings.lkasButtonLight")
       if self.CP.notCar:

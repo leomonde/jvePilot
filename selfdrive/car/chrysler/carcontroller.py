@@ -6,7 +6,8 @@ from openpilot.selfdrive.car.chrysler import chryslercan
 from openpilot.selfdrive.car.chrysler.values import RAM_CARS, CarControllerParams, ChryslerFlags, DRIVE_PERSONALITY
 from openpilot.selfdrive.car.interfaces import CarControllerBase
 
-from selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
+from openpilot.selfdrive.controls.lib.drive_helpers import V_CRUISE_MIN, V_CRUISE_MIN_IMPERIAL
+from openpilot.selfdrive.car.chrysler.long_carcontroller_v1 import LongCarControllerV1
 from common.conversions import Conversions as CV
 from common.cached_params import CachedParams
 from common.params import Params
@@ -45,11 +46,15 @@ class CarController(CarControllerBase):
     self.autoFollowDistanceLock = None
     self.button_frame = 0
     self.last_target = 0
-    self.last_aolc_ready = False
     self.last_personality = None
+    self.low_steer = not self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED
+    self.steer_gap = 0.5 if self.CP.carFingerprint in RAM_CARS else 3.0
+
+    self.long_controller = LongCarControllerV1(self.CP, self.params, self.packer)
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
+    self.sm.update(0)
 
     # cruise buttons
     das_bus = 2 if self.CP.carFingerprint in RAM_CARS else 0
@@ -85,49 +90,44 @@ class CarController(CarControllerBase):
     # steering
     new_steer = int(round(CC.actuators.steer * self.params.STEER_MAX))
     if self.frame % self.params.STEER_STEP == 0 or abs(new_steer - int(self.apply_steer_last) > self.cachedParams.get_float('jvePilot.settings.steer.chillLevel', 1000)):
-      # TODO: can we make this more sane? why is it different for all the cars?
-      high_steer = self.CP.flags & ChryslerFlags.HIGHER_MIN_STEERING_SPEED
       lkas_control_bit = self.lkas_control_bit_prev
-      if self.steerNoMinimum:
-        lkas_control_bit = CC.latActive or not high_steer  # never turn off vehicles that can already low steer
-      elif CS.out.vEgo > self.CP.minSteerSpeed:
+      if CS.out.vEgo > self.CP.minSteerSpeed or self.steerNoMinimum:
+        lkas_control_bit = CC.latActive
+      elif CS.out.vEgo < (self.CP.minSteerSpeed - self.steer_gap):
+        lkas_control_bit = False
+
+      if self.low_steer and self.lkas_control_bit_prev:
+        # low steer vehicles never turn this off
         lkas_control_bit = True
-      elif high_steer:
-        if CS.out.vEgo < (self.CP.minSteerSpeed - 3.0):
-          lkas_control_bit = False
-      elif self.CP.carFingerprint in RAM_CARS:
-        if CS.out.vEgo < (self.CP.minSteerSpeed - 0.5):
-          lkas_control_bit = False
+      else:
+        # EPS faults if LKAS enables too quickly
+        if lkas_control_bit and self.lkas_control_bit_prev != lkas_control_bit:
+          if self.next_lkas_control_change == 0:
+            self.next_lkas_control_change = self.frame + 70
+        else:
+          self.next_lkas_control_change = 0
+        lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
 
-      if not self.lkas_control_bit_prev and CC.jvePilotState.carControl.aolcAvailable and CC.jvePilotState.carControl.aolcAvailable != self.last_aolc_ready:
-        self.next_lkas_control_change = self.frame + 70
-      self.last_aolc_ready = CC.jvePilotState.carControl.aolcAvailable
-
-      # EPS faults if LKAS re-enables too quickly
-      lkas_control_bit = lkas_control_bit and (self.frame > self.next_lkas_control_change)
-
-      if not lkas_control_bit and self.lkas_control_bit_prev:
-        self.next_lkas_control_change = self.frame + 200
       self.lkas_control_bit_prev = lkas_control_bit
 
-      # steer torque
-      apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
-
-      if not CC.latActive or not lkas_control_bit:
-        apply_steer = 0
+      apply_steer = 0
+      if CC.latActive and lkas_control_bit:
+        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
 
       self.apply_steer_last = apply_steer
 
-      can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit))
+      can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit, self.steerNoMinimum, CC.latActive))
 
     if CC.enabled:
       # auto set profile
       follow_distance = CC.jvePilotState.carState.accFollowDistance or 0
       acc_eco = CC.jvePilotState.carControl.accEco or 0
-      personality = DRIVE_PERSONALITY[acc_eco][follow_distance]
+      personality = acc_eco if CS.longControl else DRIVE_PERSONALITY[acc_eco][follow_distance]
       if personality != self.last_personality:
         self.last_personality = personality
         self.settingsParams.put_nonblocking('LongitudinalPersonality', str(personality))
+
+    self.long_controller.acc(self.sm['longitudinalPlan'], self.frame, CC, CS, can_sends)
 
     self.frame += 1
 
@@ -143,31 +143,32 @@ class CarController(CarControllerBase):
       return
     self.last_button_frame = button_counter
 
-    self.button_frame += 1
-    button_counter_offset = 1
-    buttons_to_press = []
-    if cancel:
-      buttons_to_press = ['ACC_Cancel']
-    elif not button_pressed(CS.out, ButtonType.cancel):
-      if enabled and not CS.out.brakePressed:
-        button_counter_offset = [1, 1, 0, None][self.button_frame % 4]
-        if button_counter_offset is not None:
-          if resume:
-            buttons_to_press = ["ACC_Resume"]
-          elif CS.out.cruiseState.enabled:  # Control ACC
-            buttons_to_press = [self.auto_follow_button(CC, CS), self.hybrid_acc_button(CC, CS)]
+    if not self.long_controller.button_control(CC, CS):
+      self.button_frame += 1
+      button_counter_offset = 1
+      buttons_to_press = []
+      if cancel:
+        buttons_to_press = ['ACC_Cancel']
+      elif not button_pressed(CS.out, ButtonType.cancel):
+        if enabled and not CS.out.brakePressed:
+          button_counter_offset = [1, 1, 0, None][self.button_frame % 4]
+          if button_counter_offset is not None:
+            if resume:
+              buttons_to_press = ["ACC_Resume"]
+            elif CS.out.cruiseState.enabled:  # Control ACC
+              buttons_to_press = [self.auto_follow_button(CC, CS), self.hybrid_acc_button(CC, CS)]
 
-    # ACC Auto enable
-    if self.auto_enable_acc and self.frame < 50:
-      if not CS.out.cruiseState.available:
-        buttons_to_press.append("ACC_OnOff")
-      else:
-        self.auto_enable_acc = False
+      # ACC Auto enable
+      if self.auto_enable_acc and self.frame < 50:
+        if not CS.out.cruiseState.available:
+          buttons_to_press.append("ACC_OnOff")
+        else:
+          self.auto_enable_acc = False
 
-    buttons_to_press = list(filter(None, buttons_to_press))
-    if buttons_to_press is not None and len(buttons_to_press) > 0:
-      new_msg = chryslercan.create_wheel_buttons_command(self.packer, das_bus, button_counter + button_counter_offset, buttons_to_press)
-      can_sends.append(new_msg)
+      buttons_to_press = list(filter(None, buttons_to_press))
+      if buttons_to_press is not None and len(buttons_to_press) > 0:
+        new_msg = chryslercan.create_wheel_buttons_command(self.packer, das_bus, button_counter + button_counter_offset, buttons_to_press)
+        can_sends.append(new_msg)
 
   def hybrid_acc_button(self, CC, CS):
     # Move the adaptive curse control to the target speed
@@ -177,7 +178,6 @@ class CarController(CarControllerBase):
     elif CC.jvePilotState.carControl.accEco == 2:
       eco_limit = self.cachedParams.get_float('jvePilot.settings.accEco.speedAheadLevel2', 1000)
 
-    self.sm.update(0)
     if len(self.sm['longitudinalPlan'].speeds):
       extendFuture = clip(min(self.sm['longitudinalPlan'].accels) * 2, -EXTEND_FUTURE_MAX, EXTEND_FUTURE_MAX)
       targetFuture = self.sm['longitudinalPlan'].speeds[-1] + extendFuture

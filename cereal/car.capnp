@@ -12,6 +12,7 @@ struct JvePilotState {
   struct CarState {
     accFollowDistance @0 :UInt8;
     pedalPressedAmount @1 :Float32;
+    longControl @2 :Bool;
   }
 
   struct CarControl {
@@ -715,8 +716,8 @@ struct CarParams {
   safetyModelPassiveDEPRECATED @42 :SafetyModel = silent;
   minSpeedCanDEPRECATED @51 :Float32;
   communityFeatureDEPRECATED @46: Bool;
-  startingAccelRateDEPRECATED @53 :Float32;
-  steerMaxBPDEPRECATED @11 :List(Float32);
+  axleRatio @53 :Float32; # repurposed for jvePilot
+  gearRatios @11 :List(Float32); # repurposed for jvePilot
   steerMaxVDEPRECATED @12 :List(Float32);
   gasMaxBPDEPRECATED @13 :List(Float32);
   gasMaxVDEPRECATED @14 :List(Float32);

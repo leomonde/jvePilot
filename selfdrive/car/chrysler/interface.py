@@ -1,15 +1,36 @@
 #!/usr/bin/env python3
 from cereal import car
 from panda import Panda
-from openpilot.selfdrive.car import create_button_events, get_safety_config
+from openpilot.selfdrive.car import get_safety_config
 from openpilot.selfdrive.car.chrysler.values import CAR, DBC, RAM_HD, RAM_DT, RAM_CARS, ChryslerFlags
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from common.params import Params
 
+from common.cached_params import CachedParams
+cachedParams = CachedParams()
 ButtonType = car.CarState.ButtonEvent.Type
 
-
 class CarInterface(CarInterfaceBase):
+  ACCEL_MAX = 2.  # m/s2, high to not limit stock ACC
+  ACCEL_MIN = -3.5  # m/s2
+  @staticmethod
+  def get_pid_accel_limits(CS, CP, current_speed, cruise_speed):
+    return CarInterface.ACCEL_MIN, CarInterface.accel_max(CS)
+
+  @staticmethod
+  def accel_max(CS):
+    maxAccel = CarInterface.ACCEL_MAX
+    if CS.longControl:
+      eco = cachedParams.get_float('jvePilot.carState.accEco', 1000)
+      if eco == 1:
+        maxAccel = cachedParams.get_float('jvePilot.settings.accEco.longAccelLevel1', 1000)
+      elif eco == 2:
+        maxAccel = cachedParams.get_float('jvePilot.settings.accEco.longAccelLevel2', 1000)
+      else:
+        maxAccel = 2
+
+    return maxAccel
+
   @staticmethod
   def _get_params(ret, candidate, fingerprint, car_fw, experimental_long, docs):
     ret.carName = "chrysler"
@@ -43,6 +64,8 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
       ret.lateralTuning.pid.kf = 0.00006
 
+      ret.experimentalLongitudinalAvailable = True  # candidate in (CAR.CHRYSLER_PACIFICA_2018, CAR.CHRYSLER_PACIFICA_2020, CAR.DODGE_DURANGO)
+
     # Jeep
     elif candidate in (CAR.JEEP_GRAND_CHEROKEE, CAR.JEEP_GRAND_CHEROKEE_2019):
       ret.steerActuatorDelay = 0.2
@@ -53,6 +76,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kf = 0.00006
 
       ret.enableBsm = True
+      ret.experimentalLongitudinalAvailable = True
 
     # Ram
     elif candidate == CAR.RAM_1500_5TH_GEN:

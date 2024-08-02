@@ -138,6 +138,8 @@ class CarInterfaceBase(ABC):
     ret.minEnableSpeed = platform.config.specs.minEnableSpeed
     ret.minSteerSpeed = platform.config.specs.minSteerSpeed
     ret.tireStiffnessFactor = platform.config.specs.tireStiffnessFactor
+    ret.axleRatio = platform.config.specs.axleRatio
+    ret.gearRatios = platform.config.specs.gearRatios
     ret.flags |= int(platform.config.flags)
 
     ret = cls._get_params(ret, candidate, fingerprint, car_fw, experimental_long, docs)

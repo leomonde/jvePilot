@@ -3,10 +3,11 @@ from openpilot.common.conversions import Conversions as CV
 from opendbc.can.parser import CANParser
 from opendbc.can.can_define import CANDefine
 from openpilot.selfdrive.car.interfaces import CarStateBase
-from openpilot.selfdrive.car.chrysler.values import DBC, STEER_THRESHOLD, RAM_CARS
+from openpilot.selfdrive.car.chrysler.values import DBC, STEER_THRESHOLD, HYBRID_CARS, RAM_CARS
 
 import numpy as np
 from common.params import Params
+from common.cached_params import CachedParams
 
 ButtonType = car.CarState.ButtonEvent.Type
 
@@ -43,6 +44,22 @@ class CarState(CarStateBase):
     self.settingsParams = Params()
     self.lkasHeartbit = None
     self.lkas_button_light = self.settingsParams.get_bool("jvePilot.settings.lkasButtonLight")
+
+    # long control
+    self.longControl = False
+    self.cachedParams = CachedParams()
+    self.das_3 = None
+    self.das_5 = None
+    self.longEnabled = False
+    self.longControl = False
+    self.gasRpm = None
+    self.allowLong = True # CP.carFingerprint in (CAR.JEEP_CHEROKEE, CAR.JEEP_CHEROKEE_2019)
+    self.torqMin = None
+    self.torqMax = None
+    self.wheelTorqMin = None
+    self.wheelTorqMax = None
+    self.transmission_gear = None
+    self.engine_torque = None
 
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()
@@ -98,12 +115,35 @@ class CarState(CarStateBase):
     # cruise state
     cp_cruise = cp_cam if self.CP.carFingerprint in RAM_CARS else cp
 
-    ret.cruiseState.available = cp_cruise.vl["DAS_3"]["ACC_AVAILABLE"] == 1
-    ret.cruiseState.enabled = cp_cruise.vl["DAS_3"]["ACC_ACTIVE"] == 1
-    ret.cruiseState.speed = cp_cruise.vl["DAS_4"]["ACC_SET_SPEED_KPH"] * CV.KPH_TO_MS
-    ret.cruiseState.nonAdaptive = cp_cruise.vl["DAS_4"]["ACC_STATE"] in (1, 2)  # 1 NormalCCOn and 2 NormalCCSet
-    ret.cruiseState.standstill = cp_cruise.vl["DAS_3"]["ACC_STANDSTILL"] == 1
-    ret.accFaulted = cp_cruise.vl["DAS_3"]["ACC_FAULTED"] != 0
+    self.longControl = (self.CP.experimentalLongitudinalAvailable and cp.vl["DAS_4"]["ACC_STATE"] == 0
+                        and self.cachedParams.get_bool('ExperimentalLongitudinalEnabled', 1000))
+    if self.longControl:
+      ret.jvePilotCarState.longControl = True
+      ret.cruiseState.enabled = self.longEnabled
+      ret.cruiseState.available = True
+      ret.cruiseState.nonAdaptive = False
+      ret.cruiseState.standstill = False
+      ret.accFaulted = False
+      self.torqMin = cp.vl["DAS_3"]["ENGINE_TORQUE_REQUEST"]
+      self.torqMax = cp.vl["ECM_TRQ"]["ENGINE_TORQ_MAX"]
+      self.transmission_gear = int(cp.vl['TCM_A7']["CurrentGear"])
+      self.gasRpm = cp.vl["ECM_1"]["ENGINE_RPM"]
+      self.engine_torque = cp.vl["ECM_1"]["ENGINE_TORQUE"]
+      if self.CP.carFingerprint in HYBRID_CARS:
+        self.wheelTorqMin = cp.vl["AXLE_TORQ"]["AXLE_TORQ_MIN"]
+        self.wheelTorqMax = cp.vl["AXLE_TORQ"]["AXLE_TORQ_MAX"]
+    else:
+      self.longEnabled = False
+      ret.jvePilotCarState.longControl = False
+      ret.cruiseState.available = cp_cruise.vl["DAS_3"]["ACC_AVAILABLE"] == 1
+      ret.cruiseState.enabled = cp_cruise.vl["DAS_3"]["ACC_ACTIVE"] == 1
+      ret.cruiseState.speed = cp_cruise.vl["DAS_4"]["ACC_SET_SPEED_KPH"] * CV.KPH_TO_MS
+      ret.cruiseState.nonAdaptive = cp_cruise.vl["DAS_4"]["ACC_STATE"] in (1, 2)  # 1 NormalCCOn and 2 NormalCCSet
+      ret.cruiseState.standstill = cp_cruise.vl["DAS_3"]["ACC_STANDSTILL"] == 1
+      ret.accFaulted = cp_cruise.vl["DAS_3"]["ACC_FAULTED"] != 0
+
+    self.das_3 = cp.vl['DAS_3']
+    self.das_5 = cp.vl['DAS_5']
     self.lkasHeartbit = cp_cam.vl["LKAS_HEARTBIT"]
 
     if self.CP.carFingerprint in RAM_CARS:
@@ -130,10 +170,10 @@ class CarState(CarStateBase):
 
     brake = cp.vl["ESP_8"]["BRK_PRESSURE"]
     gas = cp.vl["ECM_2"]["ACCEL"]
-    if gas > 0:
-      ret.jvePilotCarState.pedalPressedAmount = float(np.interp(gas, PEDAL_GAS_PRESSED_XP, PEDAL_PRESSED_YP)) / 256
-    elif brake > 0:
+    if brake > 0:
       ret.jvePilotCarState.pedalPressedAmount = float(np.interp(brake / 16, PEDAL_BRAKE_PRESSED_XP, PEDAL_PRESSED_YP)) / -256
+    elif gas > 0:
+      ret.jvePilotCarState.pedalPressedAmount = float(np.interp(gas, PEDAL_GAS_PRESSED_XP, PEDAL_PRESSED_YP)) / 256
     else:
       ret.jvePilotCarState.pedalPressedAmount = 0
 
@@ -160,6 +200,14 @@ class CarState(CarStateBase):
     messages = [
       ("DAS_3", 50),
       ("DAS_4", 50),
+      ("DAS_5", 50),
+    ]
+    return messages
+
+  @staticmethod
+  def get_hybrid_messages():
+    messages = [
+      ("AXLE_TORQ", 50),
     ]
     return messages
 
@@ -170,7 +218,7 @@ class CarState(CarStateBase):
       ("ESP_1", 50),
       ("EPS_2", 100),
       ("ESP_6", 50),
-      ("STEERING", 100),
+      ("STEERING", 50),
       ("ECM_5", 50),
       ("CRUISE_BUTTONS", 50),
       ("STEERING_LEVERS", 10),
@@ -179,10 +227,17 @@ class CarState(CarStateBase):
       ("ESP_8", 50),
       ("ECM_2", 50),
       ("TRACTION_BUTTON", 1),
+
+      ("ECM_1", 50),
+      ("ECM_TRQ", 50),
+      ("TCM_A7", 50),
     ]
 
     if CP.enableBsm:
       messages.append(("BSM_1", 2))
+
+    if CP.carFingerprint in HYBRID_CARS:
+      messages += CarState.get_hybrid_messages()
 
     if CP.carFingerprint in RAM_CARS:
       messages += [
@@ -192,7 +247,6 @@ class CarState(CarStateBase):
     else:
       messages += [
         ("GEAR", 50),
-        ("SPEED_1", 100),
       ]
       messages += CarState.get_cruise_messages()
 
