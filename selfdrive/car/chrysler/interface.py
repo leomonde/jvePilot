@@ -101,7 +101,7 @@ class CarInterface(CarInterfaceBase):
     ret.centerToFront = ret.wheelbase * 0.44
     ret.enableBsm |= 720 in fingerprint[0]
 
-    if (0x4FF in fingerprint[0]) or Params().get_bool("jvePilot.settings.steer.noMinimum"):
+    if 0x4FF in fingerprint[0] or Params().get_bool("jvePilot.settings.steer.noMinimum"):
       ret.minSteerSpeed = -0.1
     ret.openpilotLongitudinalControl = True  # kind of...
     ret.pcmCruiseSpeed = False  # Let jvePilot control the pcm cruise speed
