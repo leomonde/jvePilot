@@ -2,6 +2,10 @@ Version jvePilot-0.9.7(v3.16.3)
 ========================
 Visit http://bit.ly/jvereadme for more information
 * Fix and enable the use of radar
+* Experimental Longitudinal Control (Alpha)
+  * Enable in settings
+  * Use the cruise buttons as normal with ACC turned OFF
+  * Currently unavailable on hybrids
 
 Version jvePilot-0.9.7(v3.16.2)
 ========================
