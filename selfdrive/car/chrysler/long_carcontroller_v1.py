@@ -163,7 +163,7 @@ class LongCarControllerV1(LongCarController):
     can_sends.append(chryslercan.das_3_command(self.packer,
                                                2 if counter_das_3_changed else 3,
                                                go_req,
-                                               None if self.hybrid else torque,
+                                               1546.75 if self.hybrid else torque,
                                                self.max_gear,
                                                stop_req and not fidget_stopped_brake_frame,
                                                brake,
