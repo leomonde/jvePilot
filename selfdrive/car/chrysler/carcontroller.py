@@ -40,7 +40,7 @@ class CarController(CarControllerBase):
     self.cachedParams = CachedParams()
     self.minAccSetting = V_CRUISE_MIN_MS if self.settingsParams.get_bool("IsMetric") else V_CRUISE_MIN_IMPERIAL_MS
     self.round_to_unit = CV.MS_TO_KPH if self.settingsParams.get_bool("IsMetric") else CV.MS_TO_MPH
-    self.steerNoMinimum = self.settingsParams.get_bool("jvePilot.settings.steer.noMinimum")
+    self.steerNoMinimum = CP.minSteerSpeed < 0 or self.settingsParams.get_bool("jvePilot.settings.steer.noMinimum")
     self.auto_enable_acc = self.settingsParams.get_bool("jvePilot.settings.autoEnableAcc")
 
     self.autoFollowDistanceLock = None
@@ -116,7 +116,7 @@ class CarController(CarControllerBase):
 
       self.apply_steer_last = apply_steer
 
-      can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit, self.steerNoMinimum, CC.latActive))
+      can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit, CC.latActive))
 
     if CC.enabled:
       # auto set profile
