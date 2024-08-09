@@ -83,7 +83,7 @@ def create_wheel_buttons_command(packer, bus, frame, buttons):
 
   return packer.make_can_msg("CRUISE_BUTTONS", bus, values)
 
-def das_3_command(packer, counter_offset, go, gas, max_gear, stop, brake, brake_prep, das_3):
+def das_3_command(packer, counter_offset, go, torque_req, torque, max_gear, stop, brake, brake_prep, das_3):
   values = das_3.copy()  # forward what we parsed
   values['ACC_AVAILABLE'] = 1
   values['ACC_ACTIVE'] = 1
@@ -100,9 +100,9 @@ def das_3_command(packer, counter_offset, go, gas, max_gear, stop, brake, brake_
     values['ACC_DECEL'] = brake
     values['ACC_BRK_PREP'] = brake_prep
 
-  if gas is not None:
-    values['ENGINE_TORQUE_REQUEST_MAX'] = 1
-    values['ENGINE_TORQUE_REQUEST'] = gas
+  if torque is not None:
+    values['ENGINE_TORQUE_REQUEST_MAX'] = torque_req
+    values['ENGINE_TORQUE_REQUEST'] = torque
 
   if max_gear is not None:
     values['GR_MAX_REQ'] = max_gear
