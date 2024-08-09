@@ -214,7 +214,7 @@ class LongCarControllerV1(LongCarController):
       offset = aTarget - CS.out.aEgo
       if offset > TORQ_ADJUST_THRESHOLD:
         under_accel_frame_count = self.under_accel_frame_count + 1  # inc under accelerating frame count
-        if frame - self.under_accel_frame_count > START_ADJUST_ACCEL_FRAMES:
+        if self.under_accel_frame_count > START_ADJUST_ACCEL_FRAMES:
           self.torq_adjust += offset * (CarInterface.accel_max(CS) / CarInterface.ACCEL_MAX)
 
     if cruise + self.torq_adjust > torqMax:  # keep the adjustment in check
