@@ -1,6 +1,14 @@
 Version jvePilot-0.9.7(v3.16.3)
 ========================
 Visit http://bit.ly/jvereadme for more information
+* Support for new WP firmware that give jvePilot control of it
+  * Only enables WP when lateral control is need to remove hard steering when not needed
+  * Firmware is based on sunnypilot advanced and is 100% backward compatible
+  * Flash it here: Branch/git `jvePilot-wp-mod` / https://github.com/j-vanetten/panda-wp-mod.git
+* Experimental Longitudinal Control (Alpha)
+  * Enable in settings
+  * Use the cruise buttons as normal with ACC turned OFF
+  * Currently unavailable on hybrids
 * Fix and enable the use of radar
 
 Version jvePilot-0.9.7(v3.16.2)
