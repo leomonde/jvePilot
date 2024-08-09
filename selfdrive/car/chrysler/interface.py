@@ -5,8 +5,9 @@ from openpilot.selfdrive.car import get_safety_config
 from openpilot.selfdrive.car.chrysler.values import CAR, DBC, RAM_HD, RAM_DT, RAM_CARS, ChryslerFlags
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from common.params import Params
-
 from common.cached_params import CachedParams
+
+params = Params()
 cachedParams = CachedParams()
 ButtonType = car.CarState.ButtonEvent.Type
 
@@ -101,10 +102,13 @@ class CarInterface(CarInterfaceBase):
     ret.centerToFront = ret.wheelbase * 0.44
     ret.enableBsm |= 720 in fingerprint[0]
 
-    if (0x4FF in fingerprint[0]) or cachedParams.get_bool("jvePilot.settings.steer.noMinimum", 0):
-      ret.minSteerSpeed = -0.1
     ret.openpilotLongitudinalControl = True  # kind of...
     ret.pcmCruiseSpeed = False  # Let jvePilot control the pcm cruise speed
+
+    # Autodetect WP
+    if (0x4FF in fingerprint[0]) or params.get_bool("jvePilot.settings.steer.noMinimum"):
+      params.put_bool("jvePilot.settings.steer.noMinimum", True)
+      ret.minSteerSpeed = -0.1
 
     return ret
 
