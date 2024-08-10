@@ -199,7 +199,7 @@ class CarState(CarStateBase):
   def get_cruise_messages():
     messages = [
       ("DAS_3", 50),
-      ("DAS_4", 50),
+      ("DAS_4", 16),
       ("DAS_5", 50),
     ]
     return messages
@@ -207,7 +207,7 @@ class CarState(CarStateBase):
   @staticmethod
   def get_hybrid_messages():
     messages = [
-      ("AXLE_TORQ", 50),
+      ("AXLE_TORQ", 100),
     ]
     return messages
 
@@ -218,7 +218,7 @@ class CarState(CarStateBase):
       ("ESP_1", 50),
       ("EPS_2", 100),
       ("ESP_6", 50),
-      ("STEERING", 50),
+      ("STEERING", 100),
       ("ECM_5", 50),
       ("CRUISE_BUTTONS", 50),
       ("STEERING_LEVERS", 10),
@@ -228,7 +228,7 @@ class CarState(CarStateBase):
       ("ECM_2", 50),
       ("TRACTION_BUTTON", 1),
 
-      ("ECM_1", 50),
+      ("ECM_1", 100),
       ("ECM_TRQ", 50),
       ("TCM_A7", 50),
     ]
