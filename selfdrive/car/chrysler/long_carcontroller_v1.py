@@ -161,7 +161,7 @@ class LongCarControllerV1(LongCarController):
     counter_das_3_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
     self.last_das_3_counter = CS.das_3['COUNTER']
 
-    if not self.hybrid or brake is not None:
+    if not self.hybrid or brake is not None or brake_prep:
       can_sends.append(chryslercan.das_3_command(self.packer,
                                                  2 if counter_das_3_changed else 3,
                                                  go_req,
