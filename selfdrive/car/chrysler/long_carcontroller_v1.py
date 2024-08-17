@@ -77,7 +77,6 @@ class LongCarControllerV1(LongCarController):
 
     under_accel_frame_count = 0
     override_request = CS.out.gasPressed or CS.out.brakePressed
-    fidget_stopped_brake_frame = CS.out.standstill and CS.das_3['COUNTER'] % 2 == 0  # change brake to keep Jeep stopped
     if not override_request:
       stop_req = long_stopping or (CS.out.standstill and aTarget <= 0)
       go_req = not stop_req and CS.out.standstill
@@ -109,7 +108,7 @@ class LongCarControllerV1(LongCarController):
           self.last_torque = None
 
       if stop_req:
-        brake = self.last_brake = aTarget # + (0.01 if fidget_stopped_brake_frame else 0.0)
+        brake = self.last_brake = aTarget
         torque = self.last_torque = None
       elif go_req:
         brake = self.last_brake = None
@@ -154,29 +153,35 @@ class LongCarControllerV1(LongCarController):
 
     self.under_accel_frame_count = under_accel_frame_count
 
-    can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, vTarget, CS.out.aEgo))
+    if frame % 4 == 0:
+      can_sends.append(chryslercan.acc_log(self.packer, int(self.torq_adjust), aTarget, vTarget, CS.out.aEgo))
 
     brake_prep = brake is not None and len(longitudinalPlan.accels) and longitudinalPlan.accels[0] - longitudinalPlan.accels[-1] > 1.0
 
     counter_das_3_changed = CS.das_3['COUNTER'] != self.last_das_3_counter
     self.last_das_3_counter = CS.das_3['COUNTER']
-    can_sends.append(chryslercan.das_3_command(self.packer,
-                                               2 if counter_das_3_changed else 3,
-                                               go_req,
-                                               False if self.hybrid else torque is not None,
-                                               1546.75 if self.hybrid else torque,
-                                               self.max_gear,
-                                               stop_req and not fidget_stopped_brake_frame,
-                                               brake,
-                                               brake_prep,
-                                               CS.das_3))
+
+    if not self.hybrid or brake is not None:
+      can_sends.append(chryslercan.das_3_command(self.packer,
+                                                 2 if counter_das_3_changed else 3,
+                                                 go_req,
+                                                 False if self.hybrid else torque is not None,
+                                                 1546.75 if self.hybrid else torque,
+                                                 self.max_gear,
+                                                 stop_req,
+                                                 brake,
+                                                 brake_prep,
+                                                 CS.das_3))
+
     if self.hybrid:
       counter_das_5_changed = CS.das_5['COUNTER'] != self.last_das_5_counter
       self.last_das_5_counter = CS.das_5['COUNTER']
-      can_sends.append(chryslercan.das_5_command(self.packer,
-                                                 2 if counter_das_5_changed else 3,
-                                                 torque,
-                                                 CS.das_5))
+
+      if torque is not None:
+        can_sends.append(chryslercan.das_5_command(self.packer,
+                                                   2 if counter_das_5_changed else 3,
+                                                   torque,
+                                                   CS.das_5))
 
   def calc_drag_force(self, engine_torque, transmission_gear, road_pitch, aEgo, vEgo, wind=0):
     force_drag = 0.5 * CdA * AIR_DENSITY * ((vEgo - wind) ** 2)
