@@ -5,6 +5,7 @@ Visit http://bit.ly/jvereadme for more information
   * Only enables WP when lateral control is need to remove hard steering when not needed
   * Firmware is based on sunnypilot advanced and is 100% backward compatible
   * Flash it here: Branch/git `jvePilot-wp-mod` / https://github.com/j-vanetten/panda-wp-mod.git
+  * If the WP is detected, the "Speed Spoofing Mod" will automatically enable
 * Experimental Longitudinal Control (Alpha)
   * Enable in settings
   * Use the cruise buttons as normal with ACC turned OFF
