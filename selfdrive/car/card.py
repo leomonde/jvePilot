@@ -39,13 +39,13 @@ class Car:
 
     self.params = Params()
 
+    experimental_long_allowed = self.params.get_bool("ExperimentalLongitudinalEnabled")
     if CI is None:
       # wait for one pandaState and one CAN packet
       print("Waiting for CAN messages...")
       get_one_can(self.can_sock)
 
       num_pandas = len(messaging.recv_one_retry(self.sm.sock['pandaStates']).pandaStates)
-      experimental_long_allowed = self.params.get_bool("ExperimentalLongitudinalEnabled")
       self.CI, self.CP = get_car(self.can_sock, self.pm.sock['sendcan'], experimental_long_allowed, num_pandas)
     else:
       self.CI, self.CP = CI, CI.CP
@@ -56,9 +56,10 @@ class Car:
     if not self.disengage_on_accelerator:
       self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.DISABLE_DISENGAGE_ON_GAS
 
-    self.aolc_enabled = self.params.get_bool("jvePilot.settings.steer.aolc")
-    if self.aolc_enabled:
+    if self.params.get_bool("jvePilot.settings.steer.aolc"):
       self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.AOLC_ENABLED
+    if experimental_long_allowed:
+      self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.LONG_ENABLED
 
     openpilot_enabled_toggle = self.params.get_bool("OpenpilotEnabledToggle")
 
