@@ -247,7 +247,7 @@ static bool chrysler_tx_hook(const CANPacket_t *to_send) {
   }
 
   // block long from sending ACC when a pedal is pressed
-  if (addr == chrysler_addrs->DAS_3) {
+  if (addr == chrysler_addrs->DAS_3 || addr == chrysler_addrs->DAS_5) {
     tx = !brake_pressed && !gas_pressed;
   }
 
