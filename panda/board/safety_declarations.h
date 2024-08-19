@@ -209,6 +209,7 @@ void safety_tick(const safety_config *safety_config);
 
 // This can be set by the safety hooks
 bool controls_allowed = false;
+bool long_allowed = false;
 bool relay_malfunction = false;
 bool gas_pressed = false;
 bool gas_pressed_prev = false;
@@ -251,6 +252,7 @@ struct sample_t angle_meas;         // last 6 steer angles/curvatures
 // If using this flag, make sure to communicate to your users that a stock safety feature is now disabled.
 #define ALT_EXP_DISABLE_STOCK_AEB 2
 
+// jvePilot Always on Lateral Control
 #define ALT_EXP_AOLC_ENABLED 4
 
 // If using this flag, be aware that harder braking is more likely to lead to rear endings,
@@ -261,6 +263,9 @@ struct sample_t angle_meas;         // last 6 steer angles/curvatures
 
 // This flag allows AEB to be commanded from openpilot.
 #define ALT_EXP_ALLOW_AEB 16
+
+// jvePilot Long Control
+#define ALT_EXP_LONG_ENABLED 32
 
 int alternative_experience = 0;
 
