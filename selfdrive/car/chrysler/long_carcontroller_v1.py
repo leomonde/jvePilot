@@ -69,7 +69,7 @@ class LongCarControllerV1(LongCarController):
     #   boost = (self.params.ACCEL_MAX - CarInterface.accel_max(CS)) * ((LOW_WINDOW - CS.out.vEgo) / LOW_WINDOW)
     #   aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS) + boost)
     # else:
-    #   aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
+    aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
 
     torqMin, torqMax = self.torqRange(CS)
     vTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
