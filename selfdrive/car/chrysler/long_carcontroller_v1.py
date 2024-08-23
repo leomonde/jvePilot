@@ -64,12 +64,12 @@ class LongCarControllerV1(LongCarController):
       self.max_gear = None
       return None
 
-    if CS.out.vEgo < LOW_WINDOW:
-      # full accel when stopped.  TODO: Should this be exponential fall off?
-      boost = (self.params.ACCEL_MAX - CarInterface.accel_max(CS)) * ((LOW_WINDOW - CS.out.vEgo) / LOW_WINDOW)
-      aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS) + boost)
-    else:
-      aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
+    # if CS.out.vEgo < LOW_WINDOW and not CS.out.standstill:
+    #   # full accel when stopped.
+    #   boost = (self.params.ACCEL_MAX - CarInterface.accel_max(CS)) * ((LOW_WINDOW - CS.out.vEgo) / LOW_WINDOW)
+    #   aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS) + boost)
+    # else:
+    #   aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
 
     torqMin, torqMax = self.torqRange(CS)
     vTarget = longitudinalPlan.speeds[-1] if len(longitudinalPlan.speeds) else 0
@@ -92,7 +92,7 @@ class LongCarControllerV1(LongCarController):
                      and self.torque(CC, CS, aTarget, vTarget) + self.torq_adjust > torqMin
 
       if go_req or ((aTarget >= 0 or engine_brake) and not currently_braking):  # gas
-        under_accel_frame_count = self.acc_gas(CC, CS, frame, aTarget, vTarget, under_accel_frame_count)
+        self.acc_gas(CC, CS, frame, aTarget, vTarget)
 
       elif aTarget < 0:  # brake
         self.acc_brake(CS, aTarget, vTarget, speed_to_far_off)
@@ -131,18 +131,25 @@ class LongCarControllerV1(LongCarController):
       go_req = None
       torque = None
 
-    # looking good, undo some of the things we did to make us go faster
+    # hills/towing
+    will_be_slowing = aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
+    if will_be_slowing:  # going to not need it
+      self.torq_adjust = max(0, self.torq_adjust - longitudinalPlan.accels[-1] * -10)
+    elif aTarget < 0:  # not needed
+      self.torq_adjust = max(0, self.torq_adjust - max(aTarget * -10, ADJUST_ACCEL_COOLDOWN_MAX))
+    elif CS.out.aEgo > aTarget:  # Too much
+      over_accel = CS.out.aEgo - aTarget
+      self.torq_adjust = max(0, self.torq_adjust - over_accel)
+    elif torque is not None:
+      under_accel = aTarget - CS.out.aEgo
+      if under_accel > TORQ_ADJUST_THRESHOLD:  # if not close enough
+        self.torq_adjust += under_accel * (CarInterface.accel_max(CS) / CarInterface.ACCEL_MAX)
+        under_accel_frame_count = self.under_accel_frame_count + 1  # inc under accelerating frame count
+        self.torq_adjust = max(0, min(torqMax, self.torq_adjust))
+
+    # Donw shift
     if under_accel_frame_count == 0:
       self.max_gear = None
-      if self.torq_adjust > 0:
-        will_be_slowing = aTarget > 0 > longitudinalPlan.accels[-1] if len(longitudinalPlan.accels) else 0
-        if will_be_slowing:  # going to not need it
-          self.torq_adjust = max(0, self.torq_adjust + longitudinalPlan.accels[-1] * 10)
-        elif aTarget < 0:  # not needed
-          self.torq_adjust = max(0, self.torq_adjust - max(aTarget * 10, ADJUST_ACCEL_COOLDOWN_MAX))
-        elif CS.out.aEgo > aTarget:  # Too much
-          self.torq_adjust = max(0, self.torq_adjust - (CS.out.aEgo - aTarget))
-
     elif under_accel_frame_count > CAN_DOWNSHIFT_ACCEL_FRAMES:
       if CS.out.vEgo < vTarget - COAST_WINDOW / CarInterface.accel_max(CS) \
           and CS.out.aEgo < CarInterface.accel_max(CS) / 5 \
@@ -204,7 +211,7 @@ class LongCarControllerV1(LongCarController):
       axle_rpm = CS.gasRpm / self.finalDriveRatios[int(CS.transmission_gear) - 1]
       return (force * vTarget) / axle_rpm
 
-  def acc_gas(self, CC, CS, frame, aTarget, vTarget, under_accel_frame_count):
+  def acc_gas(self, CC, CS, frame, aTarget, vTarget):
     torqMin, torqMax = self.torqRange(CS)
     accelerating = aTarget > 0 and vTarget > CS.out.vEgo + SLOW_WINDOW
     if accelerating:
@@ -213,23 +220,9 @@ class LongCarControllerV1(LongCarController):
     else:
       vSmoothTarget = (vTarget + CS.out.vEgo) / 2
       aSmoothTarget = aTarget
+
     cruise = self.torque(CC, CS, aSmoothTarget, vSmoothTarget)
-
-    if aTarget > 0:
-      # adjust for hills and towing
-      offset = aTarget - CS.out.aEgo
-      if offset > TORQ_ADJUST_THRESHOLD:
-        under_accel_frame_count = self.under_accel_frame_count + 1  # inc under accelerating frame count
-        if self.under_accel_frame_count > START_ADJUST_ACCEL_FRAMES:
-          self.torq_adjust += offset * (CarInterface.accel_max(CS) / CarInterface.ACCEL_MAX)
-
-    if cruise + self.torq_adjust > torqMax:  # keep the adjustment in check
-      self.torq_adjust = max(0, torqMax - cruise)
-
-    torque = cruise + self.torq_adjust
-    self.last_torque = max(torqMin + 1, min(torqMax, torque))
-
-    return under_accel_frame_count
+    self.last_torque = max(torqMin + 1, min(torqMax, cruise + self.torq_adjust))
 
   def acc_brake(self, CS, aTarget, vTarget, speed_to_far_off):
     brake_target = max(CarInterface.ACCEL_MIN, round(aTarget, 2))
