@@ -51,7 +51,7 @@ const ChryslerAddrs CHRYSLER_ADDRS = {
   .DAS_3            = 0x1F4,  // ACC
   .DAS_5            = 0x271,  // ACC for hybrids
   .DAS_6            = 0x2A6,  // LKAS HUD and auto headlight control from DASM
-  .GEAR             = 0x2EA,  // Current GEAR
+  .GEAR             = 0x170,  // Current GEAR
   .LKAS_COMMAND     = 0x292,  // LKAS controls from DASM
   .LKAS_HEARTBIT    = 0x2D9,  // LKAS HEARTBIT from DASM
   .CRUISE_BUTTONS   = 0x23B,  // Cruise control buttons
@@ -109,7 +109,7 @@ RxCheck chrysler_rx_checks[] = {
   {.msg = {{514, 0, 8, .check_checksum = false, .max_counter = 0U, .frequency = 100U}, { 0 }, { 0 }}},
   {.msg = {{CHRYSLER_ADDRS.ECM_5, 0, 8, .check_checksum = true, .max_counter = 15U, .frequency = 50U}, { 0 }, { 0 }}},
   {.msg = {{CHRYSLER_ADDRS.DAS_3, 0, 8, .check_checksum = true, .max_counter = 15U, .frequency = 50U}, { 0 }, { 0 }}},
-  {.msg = {{CHRYSLER_ADDRS.GEAR, 0, 4, .check_checksum = true, .max_counter = 15U, .frequency = 50U}, { 0 }, { 0 }}},
+  {.msg = {{CHRYSLER_ADDRS.GEAR, 0, 8, .check_checksum = true, .max_counter = 15U, .frequency = 50U}, { 0 }, { 0 }}},
 };
 
 RxCheck chrysler_ram_dt_rx_checks[] = {
@@ -194,7 +194,7 @@ static void chrysler_rx_hook(const CANPacket_t *to_push) {
   }
 
   if ((bus == 0) && (addr == chrysler_addrs->GEAR)) {
-    gear = (GET_BYTE(to_push, 0) & 0x7U);
+    gear = ((GET_BYTE(to_push, 0) >> 2) & 0x7U);
   }
 
   const int das_3_bus = (chrysler_platform == CHRYSLER_PACIFICA) ? 0 : 2;
