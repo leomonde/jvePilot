@@ -36,6 +36,7 @@ typedef struct {
   const int DAS_3;
   const int DAS_5;
   const int DAS_6;
+  const int GEAR;
   const int LKAS_COMMAND;
   const int LKAS_HEARTBIT;
   const int CRUISE_BUTTONS;
@@ -50,6 +51,7 @@ const ChryslerAddrs CHRYSLER_ADDRS = {
   .DAS_3            = 0x1F4,  // ACC
   .DAS_5            = 0x271,  // ACC for hybrids
   .DAS_6            = 0x2A6,  // LKAS HUD and auto headlight control from DASM
+  .GEAR             = 0x170,  // Current GEAR
   .LKAS_COMMAND     = 0x292,  // LKAS controls from DASM
   .LKAS_HEARTBIT    = 0x2D9,  // LKAS HEARTBIT from DASM
   .CRUISE_BUTTONS   = 0x23B,  // Cruise control buttons
@@ -107,6 +109,7 @@ RxCheck chrysler_rx_checks[] = {
   {.msg = {{514, 0, 8, .check_checksum = false, .max_counter = 0U, .frequency = 100U}, { 0 }, { 0 }}},
   {.msg = {{CHRYSLER_ADDRS.ECM_5, 0, 8, .check_checksum = true, .max_counter = 15U, .frequency = 50U}, { 0 }, { 0 }}},
   {.msg = {{CHRYSLER_ADDRS.DAS_3, 0, 8, .check_checksum = true, .max_counter = 15U, .frequency = 50U}, { 0 }, { 0 }}},
+  {.msg = {{CHRYSLER_ADDRS.GEAR, 0, 8, .check_checksum = true, .max_counter = 15U, .frequency = 50U}, { 0 }, { 0 }}},
 };
 
 RxCheck chrysler_ram_dt_rx_checks[] = {
@@ -190,16 +193,25 @@ static void chrysler_rx_hook(const CANPacket_t *to_push) {
     update_sample(&torque_meas, torque_meas_new);
   }
 
+  if ((bus == 0) && (addr == chrysler_addrs->GEAR)) {
+    forward_gear = ((GET_BYTE(to_push, 0) >> 2) & 0x7U) >= 4;
+  }
+
   const int das_3_bus = (chrysler_platform == CHRYSLER_PACIFICA) ? 0 : 2;
   if ((bus == das_3_bus) && (addr == chrysler_addrs->DAS_3)) {
-    const bool cruise_available = GET_BIT(to_push, 20U);
-    const bool lkas_enabled = GET_BIT(to_push, 21U) || ((alternative_experience & ALT_EXP_AOLC_ENABLED) && cruise_available);
-    pcm_cruise_check(lkas_enabled);
+    if (forward_gear) {
+      const bool cruise_available = GET_BIT(to_push, 20U);
+      const bool lkas_enabled = GET_BIT(to_push, 21U) || ((alternative_experience & ALT_EXP_AOLC_ENABLED) && cruise_available);
+      pcm_cruise_check(lkas_enabled);
 
-    long_allowed = !cruise_available && (alternative_experience & ALT_EXP_LONG_ENABLED);
-    if (long_allowed) {
+      long_allowed = !cruise_available && (alternative_experience & ALT_EXP_LONG_ENABLED);
+      if (long_allowed) {
+        pcm_cruise_check(false);
+        pcm_cruise_check(true);
+      }
+    } else {
       pcm_cruise_check(false);
-      pcm_cruise_check(true);
+      long_allowed = false;
     }
   }
 
