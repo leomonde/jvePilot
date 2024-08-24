@@ -2,7 +2,7 @@
 from cereal import car
 from panda import Panda
 from openpilot.selfdrive.car import get_safety_config
-from openpilot.selfdrive.car.chrysler.values import CAR, DBC, RAM_HD, RAM_DT, RAM_CARS, ChryslerFlags
+from openpilot.selfdrive.car.chrysler.values import CAR, DBC, RAM_HD, RAM_DT, RAM_CARS, HYBRID_CARS, ChryslerFlags
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from common.params import Params
 from common.cached_params import CachedParams
@@ -65,7 +65,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
       ret.lateralTuning.pid.kf = 0.00006
 
-      ret.experimentalLongitudinalAvailable = True  # candidate in (CAR.CHRYSLER_PACIFICA_2018, CAR.CHRYSLER_PACIFICA_2020, CAR.DODGE_DURANGO)
+      ret.experimentalLongitudinalAvailable = True  #candidate not in HYBRID_CARS
 
     # Jeep
     elif candidate in (CAR.JEEP_GRAND_CHEROKEE, CAR.JEEP_GRAND_CHEROKEE_2019):
@@ -107,7 +107,7 @@ class CarInterface(CarInterfaceBase):
 
     # Autodetect WP
     if (0x4FF in fingerprint[0]) or params.get_bool("jvePilot.settings.steer.noMinimum"):
-      params.put_bool("jvePilot.settings.steer.noMinimum", True)
+      params.put_bool_nonblocking("jvePilot.settings.steer.noMinimum", True)
       ret.minSteerSpeed = -0.1
 
     return ret

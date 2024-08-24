@@ -40,7 +40,7 @@ class CarController(CarControllerBase):
     self.cachedParams = CachedParams()
     self.minAccSetting = V_CRUISE_MIN_MS if self.settingsParams.get_bool("IsMetric") else V_CRUISE_MIN_IMPERIAL_MS
     self.round_to_unit = CV.MS_TO_KPH if self.settingsParams.get_bool("IsMetric") else CV.MS_TO_MPH
-    self.steerNoMinimum = CP.minSteerSpeed < 0 or self.settingsParams.get_bool("jvePilot.settings.steer.noMinimum")
+    self.steerNoMinimum = CP.minSteerSpeed < 0
     self.auto_enable_acc = self.settingsParams.get_bool("jvePilot.settings.autoEnableAcc")
 
     self.autoFollowDistanceLock = None
