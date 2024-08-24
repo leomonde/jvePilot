@@ -210,7 +210,7 @@ void safety_tick(const safety_config *safety_config);
 // This can be set by the safety hooks
 bool controls_allowed = false;
 bool long_allowed = false;
-int gear = 0;
+bool forward_gear = false;
 bool relay_malfunction = false;
 bool gas_pressed = false;
 bool gas_pressed_prev = false;

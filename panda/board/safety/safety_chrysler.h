@@ -194,15 +194,12 @@ static void chrysler_rx_hook(const CANPacket_t *to_push) {
   }
 
   if ((bus == 0) && (addr == chrysler_addrs->GEAR)) {
-    gear = ((GET_BYTE(to_push, 0) >> 2) & 0x7U);
+    forward_gear = ((GET_BYTE(to_push, 0) >> 2) & 0x7U) >= 4;
   }
 
   const int das_3_bus = (chrysler_platform == CHRYSLER_PACIFICA) ? 0 : 2;
   if ((bus == das_3_bus) && (addr == chrysler_addrs->DAS_3)) {
-    if (gear < 4) {
-      pcm_cruise_check(false);
-      long_allowed = false;
-    } else {
+    if (forward_gear) {
       const bool cruise_available = GET_BIT(to_push, 20U);
       const bool lkas_enabled = GET_BIT(to_push, 21U) || ((alternative_experience & ALT_EXP_AOLC_ENABLED) && cruise_available);
       pcm_cruise_check(lkas_enabled);
@@ -212,6 +209,9 @@ static void chrysler_rx_hook(const CANPacket_t *to_push) {
         pcm_cruise_check(false);
         pcm_cruise_check(true);
       }
+    } else {
+      pcm_cruise_check(false);
+      long_allowed = false;
     }
   }
 
