@@ -201,6 +201,7 @@ static void chrysler_rx_hook(const CANPacket_t *to_push) {
   if ((bus == das_3_bus) && (addr == chrysler_addrs->DAS_3)) {
     if (gear < 4) {
       pcm_cruise_check(false);
+      long_allowed = false;
     } else {
       const bool cruise_available = GET_BIT(to_push, 20U);
       const bool lkas_enabled = GET_BIT(to_push, 21U) || ((alternative_experience & ALT_EXP_AOLC_ENABLED) && cruise_available);
