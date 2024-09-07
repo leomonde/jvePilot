@@ -64,23 +64,19 @@ class LongCarControllerV1(LongCarController):
       self.max_gear = None
       return None
 
-    vTarget = longitudinalPlan.speeds[-1]
+    vTarget = longitudinalPlan.speeds[0]
+    aTarget = CC.actuators.accel
+    boost = 0
     if CS.out.vEgo < LOW_WINDOW and not CS.out.standstill:
       # full accel when stopped.
       boost = (self.params.ACCEL_MAX - CarInterface.accel_max(CS)) * ((LOW_WINDOW - CS.out.vEgo) / LOW_WINDOW)
-      aTarget = clip(CC.actuators.accel, self.params.ACCEL_MIN, CarInterface.accel_max(CS) + boost)
     else:
-      aTarget = CC.actuators.accel
-
       v2aTarget = longitudinalPlan.speeds[-1] - longitudinalPlan.speeds[0]
-      if aTarget > v2aTarget > 0:
-        # use speed to calc acceleration instead of model
-        aTarget = v2aTarget
-      elif 0 > v2aTarget > aTarget:
+      if aTarget > v2aTarget > 0 or 0 > v2aTarget > aTarget:
         # use speed to calc acceleration instead of model
         aTarget = v2aTarget
 
-      aTarget = clip(aTarget, self.params.ACCEL_MIN, CarInterface.accel_max(CS))
+    aTarget = clip(aTarget, self.params.ACCEL_MIN, CarInterface.accel_max(CS) + boost)
 
     torqMin, torqMax = self.torqRange(CS)
     long_stopping = CC.actuators.longControlState == LongCtrlState.stopping
