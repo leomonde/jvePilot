@@ -105,6 +105,10 @@ class CarControllerParams:
       self.STEER_DELTA_UP = 6
       self.STEER_DELTA_DOWN = 6
       self.STEER_MAX = 261  # EPS allows more, up to 350?
+    elif CP.carFingerprint in JEEPS:
+      self.STEER_DELTA_UP = 6
+      self.STEER_DELTA_DOWN = 6
+      self.STEER_MAX = 261  # EPS allows more, up to 350?
     else:
       self.STEER_DELTA_UP = 3
       self.STEER_DELTA_DOWN = 3
@@ -123,6 +127,7 @@ RAM_DT = {CAR.RAM_1500_5TH_GEN, }
 RAM_HD = {CAR.RAM_HD_5TH_GEN, }
 RAM_CARS = RAM_DT | RAM_HD
 HYBRID_CARS = {CAR.CHRYSLER_PACIFICA_2017_HYBRID,CAR.CHRYSLER_PACIFICA_2018_HYBRID, CAR.CHRYSLER_PACIFICA_2019_HYBRID}
+JEEPS = {CAR.JEEP_GRAND_CHEROKEE, CAR.JEEP_GRAND_CHEROKEE_2019}
 
 DRIVE_PERSONALITY = [
   [0, 0, 1, 2],
