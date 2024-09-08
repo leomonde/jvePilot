@@ -106,8 +106,8 @@ class CarControllerParams:
       self.STEER_DELTA_DOWN = 6
       self.STEER_MAX = 261  # EPS allows more, up to 350?
     elif CP.carFingerprint in JEEPS:
-      self.STEER_DELTA_UP = 6
-      self.STEER_DELTA_DOWN = 6
+      self.STEER_DELTA_UP = 5
+      self.STEER_DELTA_DOWN = 5
       self.STEER_MAX = 261  # EPS allows more, up to 350?
     else:
       self.STEER_DELTA_UP = 3
