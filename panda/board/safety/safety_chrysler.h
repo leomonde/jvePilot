@@ -8,6 +8,16 @@ const SteeringLimits CHRYSLER_STEERING_LIMITS = {
   .type = TorqueMotorLimited,
 };
 
+const SteeringLimits CHRYSLER_JEEPS_STEERING_LIMITS = {
+  .max_steer = 261,
+  .max_rt_delta = 112,
+  .max_rt_interval = 250000,
+  .max_rate_up = 6,
+  .max_rate_down = 6,
+  .max_torque_error = 80,
+  .type = TorqueMotorLimited,
+};
+
 const SteeringLimits CHRYSLER_RAM_DT_STEERING_LIMITS = {
   .max_steer = 350,
   .max_rt_delta = 112,
@@ -132,13 +142,17 @@ RxCheck chrysler_ram_hd_rx_checks[] = {
 
 const uint32_t CHRYSLER_PARAM_RAM_DT = 1U;  // set for Ram DT platform
 const uint32_t CHRYSLER_PARAM_RAM_HD = 2U;  // set for Ram HD platform
+const uint32_t CHRYSLER_PARAM_JEEP = 4U;  // set for Jeep platform
 
 typedef enum {
   CHRYSLER_RAM_DT,
   CHRYSLER_RAM_HD,
-  CHRYSLER_PACIFICA,  // plus Jeep
+  CHRYSLER_PACIFICA,
+  CHRYSLER_JEEP,
 } ChryslerPlatform;
-ChryslerPlatform chrysler_platform = CHRYSLER_PACIFICA;
+ChryslerPlatform chrysler_platform = CHRYSLER_JEEP;
+bool ram_platform = false;
+
 const ChryslerAddrs *chrysler_addrs = &CHRYSLER_ADDRS;
 
 static uint32_t chrysler_get_checksum(const CANPacket_t *to_push) {
@@ -197,7 +211,7 @@ static void chrysler_rx_hook(const CANPacket_t *to_push) {
     forward_gear = ((GET_BYTE(to_push, 0) >> 2) & 0x7U) >= 4;
   }
 
-  const int das_3_bus = (chrysler_platform == CHRYSLER_PACIFICA) ? 0 : 2;
+  const int das_3_bus = (ram_platform) ? 2 : 0;
   if ((bus == das_3_bus) && (addr == chrysler_addrs->DAS_3)) {
     if (forward_gear) {
       const bool cruise_available = GET_BIT(to_push, 20U);
@@ -217,10 +231,9 @@ static void chrysler_rx_hook(const CANPacket_t *to_push) {
 
   // TODO: use the same message for both
   // update vehicle moving
-  if ((chrysler_platform != CHRYSLER_PACIFICA) && (bus == 0) && (addr == chrysler_addrs->ESP_8)) {
+  if ((ram_platform) && (bus == 0) && (addr == chrysler_addrs->ESP_8)) {
     vehicle_moving = ((GET_BYTE(to_push, 4) << 8) + GET_BYTE(to_push, 5)) != 0U;
-  }
-  if ((chrysler_platform == CHRYSLER_PACIFICA) && (bus == 0) && (addr == 514)) {
+  } else if ((bus == 0) && (addr == 514)) {
     int speed_l = (GET_BYTE(to_push, 0) << 4) + (GET_BYTE(to_push, 1) >> 4);
     int speed_r = (GET_BYTE(to_push, 2) << 4) + (GET_BYTE(to_push, 3) >> 4);
     vehicle_moving = (speed_l != 0) || (speed_r != 0);
@@ -245,14 +258,16 @@ static bool chrysler_tx_hook(const CANPacket_t *to_send) {
 
   // STEERING
   if (addr == chrysler_addrs->LKAS_COMMAND) {
-    int start_byte = (chrysler_platform == CHRYSLER_PACIFICA) ? 0 : 1;
+    int start_byte = (ram_platform) ? 1 : 0;
     int desired_torque = ((GET_BYTE(to_send, start_byte) & 0x7U) << 8) | GET_BYTE(to_send, start_byte + 1);
     desired_torque -= 1024;
 
-    const SteeringLimits limits = (chrysler_platform == CHRYSLER_PACIFICA) ? CHRYSLER_STEERING_LIMITS :
-                                  (chrysler_platform == CHRYSLER_RAM_DT) ? CHRYSLER_RAM_DT_STEERING_LIMITS : CHRYSLER_RAM_HD_STEERING_LIMITS;
+    const SteeringLimits limits = chrysler_platform == CHRYSLER_JEEP ? CHRYSLER_JEEPS_STEERING_LIMITS :
+                                  chrysler_platform == CHRYSLER_RAM_DT ? CHRYSLER_RAM_DT_STEERING_LIMITS :
+                                  chrysler_platform == CHRYSLER_RAM_HD ? CHRYSLER_RAM_HD_STEERING_LIMITS : CHRYSLER_STEERING_LIMITS;
 
-    bool steer_req = (chrysler_platform == CHRYSLER_PACIFICA) ? GET_BIT(to_send, 4U) : (GET_BYTE(to_send, 3) & 0x7U) == 2U;
+    bool steer_req = (ram_platform) ? (GET_BYTE(to_send, 3) & 0x7U) == 2U : GET_BIT(to_send, 4U);
+
     if (steer_torque_cmd_checks(desired_torque, steer_req, limits)) {
       tx = false;
     }
@@ -298,17 +313,23 @@ static safety_config chrysler_init(uint16_t param) {
 
   bool enable_ram_dt = GET_FLAG(param, CHRYSLER_PARAM_RAM_DT);
   if (enable_ram_dt) {
+    ram_platform = true;
     chrysler_platform = CHRYSLER_RAM_DT;
     chrysler_addrs = &CHRYSLER_RAM_DT_ADDRS;
     ret = BUILD_SAFETY_CFG(chrysler_ram_dt_rx_checks, CHRYSLER_RAM_DT_TX_MSGS);
 #ifdef ALLOW_DEBUG
   } else if (GET_FLAG(param, CHRYSLER_PARAM_RAM_HD)) {
+    ram_platform = true;
     chrysler_platform = CHRYSLER_RAM_HD;
     chrysler_addrs = &CHRYSLER_RAM_HD_ADDRS;
     ret = BUILD_SAFETY_CFG(chrysler_ram_hd_rx_checks, CHRYSLER_RAM_HD_TX_MSGS);
 #endif
   } else {
-    chrysler_platform = CHRYSLER_PACIFICA;
+    if (GET_FLAG(param, CHRYSLER_PARAM_JEEP)) {
+      chrysler_platform = CHRYSLER_JEEP;
+    } else {
+      chrysler_platform = CHRYSLER_PACIFICA;
+    }
     chrysler_addrs = &CHRYSLER_ADDRS;
     ret = BUILD_SAFETY_CFG(chrysler_rx_checks, CHRYSLER_TX_MSGS);
   }
