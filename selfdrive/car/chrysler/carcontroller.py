@@ -89,7 +89,8 @@ class CarController(CarControllerBase):
 
     # steering
     new_steer = int(round(CC.actuators.steer * self.params.STEER_MAX))
-    if self.frame % self.params.STEER_STEP == 0 or abs(new_steer - int(self.apply_steer_last)) > self.cachedParams.get_float('jvePilot.settings.steer.chillLevel', 1000):
+    steer_diff = abs(new_steer - int(self.apply_steer_last))
+    if self.frame % self.params.STEER_STEP == 0 or steer_diff > self.cachedParams.get_float('jvePilot.settings.steer.chillLevel', 1000):
       lkas_control_bit = self.lkas_control_bit_prev
       if CS.out.vEgo > self.CP.minSteerSpeed or self.steerNoMinimum:
         lkas_control_bit = CC.latActive
@@ -110,13 +111,18 @@ class CarController(CarControllerBase):
 
       self.lkas_control_bit_prev = lkas_control_bit
 
-      apply_steer = 0
-      if CC.latActive and lkas_control_bit:
-        apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
+      times = clip(int((steer_diff - 1) / 3) + 1, 1, 3)
+      while times > 0:
+        apply_steer = 0
+        if CC.latActive and lkas_control_bit:
+          apply_steer = apply_meas_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorqueEps, self.params)
+          times -= 1
+        else:
+          times = 0
 
-      self.apply_steer_last = apply_steer
+        self.apply_steer_last = apply_steer
 
-      can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit, CC.latActive))
+        can_sends.append(chryslercan.create_lkas_command(self.packer, self.CP, int(apply_steer), lkas_control_bit, CC.latActive))
 
     if CC.enabled:
       # auto set profile
