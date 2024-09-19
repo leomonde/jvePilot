@@ -10,7 +10,7 @@ const SteeringLimits CHRYSLER_STEERING_LIMITS = {
 
 const SteeringLimits CHRYSLER_JEEPS_STEERING_LIMITS = {
   .max_steer = 261,
-  .max_rt_delta = 112,
+  .max_rt_delta = 225, // 6 max rate up * 100Hz send rate * 250000 RT interval / 1000000 = 150 ; 150 * 1.5 for safety pad = 225
   .max_rt_interval = 250000,
   .max_rate_up = 6,
   .max_rate_down = 6,
