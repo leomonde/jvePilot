@@ -14,7 +14,7 @@ const SteeringLimits CHRYSLER_JEEPS_STEERING_LIMITS = {
   .max_rt_interval = 250000,
   .max_rate_up = 6,
   .max_rate_down = 6,
-  .max_torque_error = 80,
+  .max_torque_error = 160,
   .type = TorqueMotorLimited,
 };
 
