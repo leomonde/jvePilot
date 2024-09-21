@@ -10,7 +10,7 @@ from openpilot.selfdrive.car.chrysler.interface import CarInterface
 LongCtrlState = car.CarControl.Actuators.LongControlState
 
 # LONG PARAMS
-LOW_WINDOW = CV.MPH_TO_MS * 5
+LOW_WINDOW = CV.MPH_TO_MS * 8
 SLOW_WINDOW = CV.MPH_TO_MS * 20
 COAST_WINDOW = CV.MPH_TO_MS * 2
 
@@ -67,9 +67,9 @@ class LongCarControllerV1(LongCarController):
     vTarget = longitudinalPlan.speeds[0]
     aTarget = CC.actuators.accel
     boost = 0
-    if CS.out.vEgo < LOW_WINDOW and not CS.out.standstill:
-      # full accel when stopped.
-      boost = (self.params.ACCEL_MAX - CarInterface.accel_max(CS)) * ((LOW_WINDOW - CS.out.vEgo) / LOW_WINDOW)
+    if CS.out.vEgo < LOW_WINDOW and aTarget > TORQ_ADJUST_THRESHOLD :
+      # full accel when almost stopped
+      boost = self.params.ACCEL_MAX * ((LOW_WINDOW - CS.out.vEgo) / LOW_WINDOW)
     else:
       v2aTarget = longitudinalPlan.speeds[-1] - longitudinalPlan.speeds[0]
       if aTarget > v2aTarget > 0 or 0 > v2aTarget > aTarget:
