@@ -67,14 +67,16 @@ class LongCarControllerV1(LongCarController):
     vTarget = longitudinalPlan.speeds[0]
     aTarget = CC.actuators.accel
     boost = 0
-    if CS.out.vEgo < SLOW_WINDOW and aTarget > TORQ_ADJUST_THRESHOLD :
-      # full accel when almost stopped
-      boost = self.params.ACCEL_MAX * ((SLOW_WINDOW - CS.out.vEgo) / SLOW_WINDOW)
-    else:
-      v2aTarget = longitudinalPlan.speeds[-1] - longitudinalPlan.speeds[0]
-      if aTarget > v2aTarget > 0 or 0 > v2aTarget > aTarget:
-        # use speed to calc acceleration instead of model
-        aTarget = v2aTarget
+    if CS.out.vEgo < SLOW_WINDOW and aTarget > 0:
+      # improve slow speed acceleration?
+      speed_limiter = (SLOW_WINDOW - CS.out.vEgo) / SLOW_WINDOW
+      accel_limiter = max(0, (aTarget - CS.out.aEgo) / TORQ_ADJUST_THRESHOLD)
+      boost = self.params.ACCEL_MAX * min(speed_limiter, accel_limiter)
+
+    v2aTarget = longitudinalPlan.speeds[-1] - longitudinalPlan.speeds[0]
+    if aTarget > v2aTarget > 0 or 0 > v2aTarget > aTarget:
+      # use speed to calc acceleration instead of model
+      aTarget = v2aTarget
 
     aTarget = clip(aTarget, self.params.ACCEL_MIN, CarInterface.accel_max(CS) + boost)
 
