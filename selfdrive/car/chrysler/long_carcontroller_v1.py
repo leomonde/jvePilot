@@ -15,7 +15,6 @@ SLOW_WINDOW = CV.MPH_TO_MS * 20
 COAST_WINDOW = CV.MPH_TO_MS * 2
 
 # accelerator
-ACCEL_GO_MIN = 0.003
 TORQ_RELEASE_CHANGE = 0.35
 TORQ_ADJUST_THRESHOLD = 0.3
 START_ADJUST_ACCEL_FRAMES = 100
@@ -67,8 +66,6 @@ class LongCarControllerV1(LongCarController):
 
     vTarget = longitudinalPlan.speeds[0]
     aTarget = CC.actuators.accel
-    if 0 < aTarget < ACCEL_GO_MIN:
-      aTarget = -ACCEL_GO_MIN # treat as stop
 
     boost = 0
     if CS.out.vEgo < SLOW_WINDOW and aTarget > 0:
@@ -78,7 +75,7 @@ class LongCarControllerV1(LongCarController):
       boost = self.params.ACCEL_MAX * min(speed_limiter, accel_limiter)
 
     v2aTarget = longitudinalPlan.speeds[-1] - longitudinalPlan.speeds[0]
-    if aTarget > v2aTarget > 0 or 0 > v2aTarget > aTarget:
+    if aTarget > v2aTarget > 0 or 0 > aTarget > v2aTarget:
       # use speed to calc acceleration instead of model
       aTarget = v2aTarget
 
@@ -121,6 +118,8 @@ class LongCarControllerV1(LongCarController):
 
       if stop_req:
         brake = self.last_brake = aTarget if not CS.out.standstill else min(-2, aTarget)
+        fidget_stopped_brake_frame = frame % 32 == 0
+        brake += 0.01 if fidget_stopped_brake_frame else 0.0
         torque = self.last_torque = None
       elif go_req:
         brake = self.last_brake = None
