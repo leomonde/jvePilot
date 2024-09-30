@@ -118,7 +118,7 @@ class LongCarControllerV1(LongCarController):
 
       if stop_req:
         brake = self.last_brake = aTarget if not CS.out.standstill else min(-2, aTarget)
-        fidget_stopped_brake_frame = frame % 32 == 0
+        fidget_stopped_brake_frame = frame % 100 < 50
         brake += 0.01 if fidget_stopped_brake_frame else 0.0
         torque = self.last_torque = None
       elif go_req:
