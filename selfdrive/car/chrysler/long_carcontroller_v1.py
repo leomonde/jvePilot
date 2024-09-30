@@ -75,7 +75,7 @@ class LongCarControllerV1(LongCarController):
       boost = self.params.ACCEL_MAX * min(speed_limiter, accel_limiter)
 
     v2aTarget = longitudinalPlan.speeds[-1] - longitudinalPlan.speeds[0]
-    if aTarget > v2aTarget > 0 or 0 > aTarget > v2aTarget:
+    if aTarget > v2aTarget > 0:
       # use speed to calc acceleration instead of model
       aTarget = v2aTarget
 
