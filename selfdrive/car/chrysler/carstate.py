@@ -199,7 +199,7 @@ class CarState(CarStateBase):
   def get_cruise_messages():
     messages = [
       ("DAS_3", 50),
-      ("DAS_4", 50),
+      ("DAS_4", 16),
       ("DAS_5", 50),
     ]
     return messages
