@@ -54,11 +54,11 @@ def create_lkas_hud(packer, CP, lat_active, hud_alert, hud_count, car_model, aut
   return packer.make_can_msg("DAS_6", 0, values)
 
 
-def create_lkas_command(packer, CP, apply_steer, lkas_control_bit, wp_control, wp_active):
+def create_lkas_command(packer, CP, apply_steer, lkas_control_bit, wp_active):
   # LKAS_COMMAND Lane-keeping signal to turn the wheel
   enabled_val = 2 if CP.carFingerprint in RAM_CARS else 1
   values = {
-    "WP_CONTROL": 1 if wp_control else 0,
+    "WP_CONTROL": 1,
     "WP_ACTIVE": 1 if wp_active else 0,
     "STEERING_TORQUE": apply_steer,
     "LKAS_CONTROL_BIT": enabled_val if lkas_control_bit else 0,
@@ -83,7 +83,7 @@ def create_wheel_buttons_command(packer, bus, frame, buttons):
 
   return packer.make_can_msg("CRUISE_BUTTONS", bus, values)
 
-def das_3_command(packer, counter_offset, go, gas, max_gear, stop, brake, brake_prep, das_3):
+def das_3_command(packer, counter_offset, go, torque_req, torque, max_gear, stop, brake, brake_prep, das_3):
   values = das_3.copy()  # forward what we parsed
   values['ACC_AVAILABLE'] = 1
   values['ACC_ACTIVE'] = 1
@@ -100,9 +100,9 @@ def das_3_command(packer, counter_offset, go, gas, max_gear, stop, brake, brake_
     values['ACC_DECEL'] = brake
     values['ACC_BRK_PREP'] = brake_prep
 
-  if gas is not None:
-    values['ENGINE_TORQUE_REQUEST_MAX'] = 1
-    values['ENGINE_TORQUE_REQUEST'] = gas
+  if torque is not None:
+    values['ENGINE_TORQUE_REQUEST_MAX'] = torque_req
+    values['ENGINE_TORQUE_REQUEST'] = torque
 
   if max_gear is not None:
     values['GR_MAX_REQ'] = max_gear
