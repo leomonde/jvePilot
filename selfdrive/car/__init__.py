@@ -1,6 +1,6 @@
 # functions common among cars
 from collections import namedtuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntFlag, ReprEnum, EnumType
 from dataclasses import replace
 
@@ -225,6 +225,8 @@ class CarSpecs:
   minSteerSpeed: float = 0.0  # m/s
   minEnableSpeed: float = -1.0  # m/s
   tireStiffnessFactor: float = 1.0
+  gearRatios: list = list[float]
+  axleRatio: float = 0.0
 
   def override(self, **kwargs):
     return replace(self, **kwargs)

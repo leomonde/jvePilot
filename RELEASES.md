@@ -1,6 +1,25 @@
-Version jvePilot-0.9.7(v3.16.1)
+Version jvePilot-0.9.7(v3.16.3)
 ========================
 Visit http://bit.ly/jvereadme for more information
+* Support for new WP firmware that give jvePilot control of it
+  * Only enables WP when lateral control is need to remove hard steering when not needed
+  * Autodetect the WP and enables automatically without the need to manually enable in setting
+  * Flash it here: Branch/git `jvePilot-wp-mod` / https://github.com/j-vanetten/panda-wp-mod.git
+* Experimental Longitudinal Control (Alpha)
+  * Enable in settings
+  * Use the cruise buttons as normal with ACC turned OFF
+  * Currently unavailable on hybrids
+* Fix and enable the use of radar
+* Switch from PID to torque control for Jeeps
+
+Version jvePilot-0.9.7(v3.16.2)
+========================
+* Improved ACC speed selection by projecting 2 seconds beyond what the model produces
+  * Better braking and acceleration
+  * Acceleration improved when ACC Eco is off
+
+Version jvePilot-0.9.7(v3.16.1)
+========================
 * LKAS button now toggles use of LKAS instead of toggling experimental mode
   * Experimental mode can be toggled using steering/experimental button on the comma screen
 * Auto set driving personality based on follow distance and eco settings

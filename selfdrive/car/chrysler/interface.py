@@ -1,22 +1,44 @@
 #!/usr/bin/env python3
 from cereal import car
 from panda import Panda
-from openpilot.selfdrive.car import create_button_events, get_safety_config
-from openpilot.selfdrive.car.chrysler.values import CAR, DBC, RAM_HD, RAM_DT, RAM_CARS, ChryslerFlags
+from openpilot.selfdrive.car import get_safety_config
+from openpilot.selfdrive.car.chrysler.values import CAR, DBC, RAM_HD, RAM_DT, RAM_CARS, HYBRID_CARS, JEEPS, ChryslerFlags
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase
 from common.params import Params
+from common.cached_params import CachedParams
 
+params = Params()
+cachedParams = CachedParams()
 ButtonType = car.CarState.ButtonEvent.Type
 
-
 class CarInterface(CarInterfaceBase):
+  ACCEL_MAX = 2.  # m/s2, high to not limit stock ACC
+  ACCEL_MIN = -3.5  # m/s2
+  @staticmethod
+  def get_pid_accel_limits(CS, CP, current_speed, cruise_speed):
+    return CarInterface.ACCEL_MIN, CarInterface.accel_max(CS)
+
+  @staticmethod
+  def accel_max(CS):
+    maxAccel = CarInterface.ACCEL_MAX
+    if CS.longControl:
+      eco = cachedParams.get_float('jvePilot.carState.accEco', 1000)
+      if eco == 1:
+        maxAccel = cachedParams.get_float('jvePilot.settings.accEco.longAccelLevel1', 1000)
+      elif eco == 2:
+        maxAccel = cachedParams.get_float('jvePilot.settings.accEco.longAccelLevel2', 1000)
+      else:
+        maxAccel = 2
+
+    return maxAccel
+
   @staticmethod
   def _get_params(ret, candidate, fingerprint, car_fw, experimental_long, docs):
     ret.carName = "chrysler"
     ret.dashcamOnly = candidate in RAM_HD
 
     # radar parsing needs some work, see https://github.com/commaai/openpilot/issues/26842
-    ret.radarUnavailable = True # DBC[candidate]['radar'] is None
+    ret.radarUnavailable = DBC[candidate]['radar'] is None
     ret.steerActuatorDelay = 0.1
     ret.steerLimitTimer = 0.4
 
@@ -26,6 +48,8 @@ class CarInterface(CarInterfaceBase):
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_CHRYSLER_RAM_HD
     elif candidate in RAM_DT:
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_CHRYSLER_RAM_DT
+    elif candidate in JEEPS:
+      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_CHRYSLER_JEEP
 
     CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
     if candidate not in RAM_CARS:
@@ -43,16 +67,19 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
       ret.lateralTuning.pid.kf = 0.00006
 
+      ret.experimentalLongitudinalAvailable = False # candidate not in HYBRID_CARS
+
     # Jeep
     elif candidate in (CAR.JEEP_GRAND_CHEROKEE, CAR.JEEP_GRAND_CHEROKEE_2019):
       ret.steerActuatorDelay = 0.2
 
-      ret.lateralTuning.init('pid')
-      ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[9., 20.], [9., 20.]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
-      ret.lateralTuning.pid.kf = 0.00006
+      # ret.lateralTuning.init('pid')
+      # ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[9., 20.], [9., 20.]]
+      # ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
+      # ret.lateralTuning.pid.kf = 0.00006
 
       ret.enableBsm = True
+      ret.experimentalLongitudinalAvailable = True
 
     # Ram
     elif candidate == CAR.RAM_1500_5TH_GEN:
@@ -77,10 +104,13 @@ class CarInterface(CarInterfaceBase):
     ret.centerToFront = ret.wheelbase * 0.44
     ret.enableBsm |= 720 in fingerprint[0]
 
-    if Params().get_bool("jvePilot.settings.steer.noMinimum"):
-      ret.minSteerSpeed = -0.1
     ret.openpilotLongitudinalControl = True  # kind of...
     ret.pcmCruiseSpeed = False  # Let jvePilot control the pcm cruise speed
+
+    # Autodetect WP
+    if (0x4FF in fingerprint[0]) or params.get_bool("jvePilot.settings.steer.noMinimum"):
+      params.put_bool_nonblocking("jvePilot.settings.steer.noMinimum", True)
+      ret.minSteerSpeed = -0.1
 
     return ret
 

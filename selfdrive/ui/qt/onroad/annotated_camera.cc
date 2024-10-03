@@ -70,6 +70,8 @@ void AnnotatedCameraWidget::updateState(const UIState &s) {
   pedalPressedAmount = int(sm["carState"].getCarState().getJvePilotCarState().getPedalPressedAmount() * 255);
   accEco = s.scene.accEco;
   autoFollowEnabled = s.scene.autoFollowEnabled == 1;
+  longControl = s.scene.longControl;
+  cruiseEnabled = s.scene.cruiseEnabled;
 
   // update engageability/experimental mode button
   experimental_btn->updateState(s);
@@ -194,23 +196,43 @@ void AnnotatedCameraWidget::drawHud(QPainter &p) {
   drawText(p, rect().center().x(), 290, speedUnit, 200);
 
   if (accEco >= 0) { // got data yet?
-    // Calculate offsets for the icon's position
-    int xOffset = -28; // offset for x-coordinate
-    int yOffset = 200; // offset for y-coordinate
-    drawIcon(p,
-             QPoint(rect().right() - radius / 2 - bdr_s * 2 - xOffset,
-             rect().bottom() - footer_h / 2 - button_bigger - radius - yOffset),
-             auto_follow_imgs[autoFollowEnabled], QColor(0, 0, 0, 0), 1.0);
+    if (!longControl) {
+      // Calculate offsets for the icon's position
+      int xOffset = -28; // offset for x-coordinate
+      int yOffset = 200; // offset for y-coordinate
+      drawIcon(p,
+               QPoint(rect().right() - radius / 2 - bdr_s * 2 - xOffset,
+               rect().bottom() - footer_h / 2 - button_bigger - radius - yOffset),
+               auto_follow_imgs[autoFollowEnabled], QColor(0, 0, 0, 0), 1.0);
+    } else if (cruiseEnabled) {
+      // Calculate offsets for the icon's position
+      int xOffset = -28; // offset for x-coordinate
+      int yOffset = 200; // offset for y-coordinate
+      drawIcon(p,
+               QPoint(rect().right() - radius / 2 - bdr_s * 2 - xOffset,
+               rect().bottom() - footer_h / 2 - button_bigger - radius - yOffset),
+               QPixmap("../assets/jvepilot/driving_brain_on.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation),
+               QColor(0, 0, 0, 0), 1.0);
+    } else {
+      // Calculate offsets for the icon's position
+      int xOffset = -28; // offset for x-coordinate
+      int yOffset = 200; // offset for y-coordinate
+      drawIcon(p,
+               QPoint(rect().right() - radius / 2 - bdr_s * 2 - xOffset,
+               rect().bottom() - footer_h / 2 - button_bigger - radius - yOffset),
+               QPixmap("../assets/jvepilot/driving_brain_off.png").scaled(img_size, img_size, Qt::KeepAspectRatio, Qt::SmoothTransformation),
+               QColor(0, 0, 0, 0), 1.0);
+    }
 
     // eco icon
-    int xOffset2 = -120; // offset for x-coordinate
-    int yOffset2 = 150; // offset for y-coordinate
+    int xOffset = -120; // offset for x-coordinate
+    int yOffset = 150; // offset for y-coordinate
     int iconSize = 175; // icon size (adjust as needed)
-    drawIcon(p, QPoint(rect().right() - radius / 2 - bdr_s * 2 - button_bigger - xOffset2, rect().bottom() - footer_h / 2 - button_bigger - yOffset2),
+    drawIcon(p, QPoint(rect().right() - radius / 2 - bdr_s * 2 - button_bigger - xOffset, rect().bottom() - footer_h / 2 - button_bigger - yOffset),
              eco_imgs[accEco].scaled(iconSize, iconSize), QColor(0, 0, 0, 0), 1.0);
     uiState()->scene.accEco_btn = QRect(
-      rect().right() - radius / 2 - bdr_s * 2 - button_bigger - xOffset2,
-      rect().bottom() - footer_h / 2 - button_bigger - yOffset2,
+      rect().right() - radius / 2 - bdr_s * 2 - button_bigger - xOffset,
+      rect().bottom() - footer_h / 2 - button_bigger - yOffset,
       img_size + button_bigger,
       img_size + button_bigger);
   }

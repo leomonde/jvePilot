@@ -1,11 +1,11 @@
 [![openpilot on the comma 3X](https://github.com/commaai/openpilot/assets/8762862/f09e6d29-db2d-4179-80c2-51e8d92bdb5c)](https://comma.ai/shop/comma-3x)
 
-# jvePilot OpenPilot/ACC for Chrysler/Jeep 
+# jvePilot OpenPilot/ACC for Chrysler/Jeep
 This fork is only for Chrysler/Jeep vehicles and requires a Comma 3 or later device to run. Comma 2 users need to use [this branch](https://github.com/j-vanetten/openpilot/tree/jvePilot-c2-release)
 
 [![Buy me a beer!](https://github.com/j-vanetten/openpilot/blob/jvePilot-release/.github/ButMeABeer.png?raw=true)](https://www.buymeacoffee.com/jvePilot)
 
-Come join us on [Discord](https://discord.gg/r8yaDBdnwH)! 
+Come join us on [Discord](https://discord.gg/r8yaDBdnwH)!
 
 # Table of contents
 - [**Safety Notes**](#safety-notes)
@@ -34,7 +34,7 @@ Come join us on [Discord](https://discord.gg/r8yaDBdnwH)!
 
 ---
 
-# jvePilot 
+# jvePilot
 I have a 2018 Grand Cherokee Trailhawk, so I'm only able to confirm features using this vehicle.
 * Pacifica also confirmed to be working
 
@@ -49,8 +49,8 @@ This is my personal OpenPilot fork that includes features that I feel make it a 
 * Always On Lateral Control so steering is active even if ACC isn't
 * Auto enable ACC on start
 * Auto follow feature to adjust the follow distance based on speed (Speeds are configurable)
-* ACC Eco to limit the throttle when accelerating  
-* Syncs jvePilot display speed with the vehicle speedometer 
+* ACC Eco to limit the throttle when accelerating
+* Syncs jvePilot display speed with the vehicle speedometer
 * Gas/brake indication using green/red colors on speed indicator
 
 ### Longitudinal control
@@ -66,13 +66,13 @@ It does this by simulating ACC+ and ACC- button presses on the steering wheel to
 It is limited as ACC only goes down to 20 mph, so it doesn't help as low speeds.
 
 ### Always On Lateral Control
-Always On Lateral Control, or AOLC, is a feature that allows jvePilot to steer even if ACC isn't actively engaged.  
+Always On Lateral Control, or AOLC, is a feature that allows jvePilot to steer even if ACC isn't actively engaged.
 Enabling this feature will allow a driver to take control of gas/brakes while still retaining the automatic steering provided by jvePilot.
 Because the low torque applied to the steering, it's very easy to override the steering if needed.
 
 ### ACC Ready on Start
-When enabled, jvePilot will enable ACC on start.  
-This pairs well with Always On Lateral Control so lateral control is ready to go without having to remember to press the ACC on/off button.      
+When enabled, jvePilot will enable ACC on start.
+This pairs well with Always On Lateral Control so lateral control is ready to go without having to remember to press the ACC on/off button.
 
 ### Auto Follow
 Auto Follow is a way to automate the changing of the stock follow distance setting.
@@ -81,21 +81,21 @@ Setting the follow speed to one/two bars helps with keeping up with cars that ta
 The faster you go, the more distance you want, so you can have more confidence in ACC being able to stop in case it needs to.
 
 The current enabled state of Auto Follow is as an icon above the ACC Eco button on the jvePilot display.
-Pressing Follow + or - will disable Auto Follow giving you full control to set the follow distance. 
-To re-enable Auto Follow, hold either Follow + or - for half a second. 
- 
+Pressing Follow + or - will disable Auto Follow giving you full control to set the follow distance.
+To re-enable Auto Follow, hold either Follow + or - for half a second.
+
 ### ACC Eco
-When enabled, jvePilot will limit how far ahead the ACC setting is above the current speed.  
+When enabled, jvePilot will limit how far ahead the ACC setting is above the current speed.
 This prevents the vehicle from using an aggressive throttle to get up to speed saving on gas/battery.
 
-The ACC Eco button is located in the lower right corner of the display.  
+The ACC Eco button is located in the lower right corner of the display.
 Tapping the button cycles between off, level 1, and level 2 eco settings.
-Level 2 provides the slowest acceleration and is selected when both leaves are green.    
+Level 2 provides the slowest acceleration and is selected when both leaves are green.
 Level 1 should provide a balance is selected when only one leaf is green.
-If you feel these settings are not right for you or your vehicle, see the [ACC Eco](#acc-eco) setting to adjust them. 
+If you feel these settings are not right for you or your vehicle, see the [ACC Eco](#acc-eco) setting to adjust them.
 Much like your vehicles eco/sport modes, the current setting is persisted between drives.
 
-## How to use it 
+## How to use it
 When using this branch, you will be setting the max ACC speed on the jvePilot display instead of the one in the dashboard.
 jvePilot will then set the ACC setting in the dashboard to the targeted speed, but never exceeding the max speed set on the jvePilot display.
 A quick press of the ACC+ and ACC- buttons will change this speed by 5 mph on the jvePilot display, while a long deliberate press (about a 1/2 second press) changes it by 1 mph.
@@ -118,24 +118,24 @@ The easiest way to install jvePilot is to factory reset your [C3](https://www.yo
 ## Branches
 `/jvePilot-release` - The latest release.  Will contain the latest version I feel is ready for daily use. Custom Software URL: `https://bit.ly/jvePilot-release`
 
-`/jvePilot-beta` - Sometimes I have people wanting to beta test jvePilot's new features.  Mostly stable, but still can be buggy. Custom Software URL: `https://bit.ly/jvePilot-beta` 
+`/jvePilot-beta` - Sometimes I have people wanting to beta test jvePilot's new features.  Mostly stable, but still can be buggy. Custom Software URL: `https://bit.ly/jvePilot-beta`
 
 `/feature/*` - These branches are where I'm working on new features.  These are never safe to run as they change all the time.
 
 ---
 # Customizing
-Customizing features and parameters can be done on the UI display.  
-Click the gear icon and then select jvePilot from the sidebar.  
+Customizing features and parameters can be done on the UI display.
+Click the gear icon and then select jvePilot from the sidebar.
 Clicking on the text of feature of will show more information about it and allow customization of the feature.
-Note that some settings do require a vehicle restart, and some don't 
-The settings that don't require a restart may take upward of 5 seconds to take effect after changing them. 
+Note that some settings do require a vehicle restart, and some don't
+The settings that don't require a restart may take upward of 5 seconds to take effect after changing them.
 
 
 ## Slow in Curves
 jvePilot will slow in curves so that you don't have to.
 * Default: On
 * Vehicle Restart Required: No
-### Speed Ratio 
+### Speed Ratio
 Use this to tune the speed in curves to you liking.
 Setting this to 1.2 will cause jvePilot to drive 20% faster in turns than if it was set to the default of 1.0
 * Default: 1.0
@@ -158,7 +158,7 @@ Reverse the stock ACC +/- button's 1mph on short press and 5mph on long press.  
 ## Auto Follow
 If you don't want auto follow enabled on every start, turn this off.
 ### 1-2 Bar Change Over
-When your speed (in MPH) is below this setting, Auto Follow will set the follow setting to one bar.  
+When your speed (in MPH) is below this setting, Auto Follow will set the follow setting to one bar.
 When you reach this speed (in MPH), Auto Follow will set the follow setting to two bars.
 * Default: 15
 * Units: MPH
@@ -181,10 +181,10 @@ When you reach this speed (in MPH), Auto Follow will set the follow setting to f
 
 ## ACC Eco
 ACC Eco limits acceleration by keep the ACC cruise speed closer to your current speed.
-These setting are how far ahead, in MPH, of your current speed ACC will be set.  
+These setting are how far ahead, in MPH, of your current speed ACC will be set.
 The higher the number, the more aggressive ACC will be when accelerating.
 ### Keep ahead at ACC Eco level 1
-Use this setting to adjust ACC Eco level 1 (one green leaf) for a balance of speed and eco-ness  
+Use this setting to adjust ACC Eco level 1 (one green leaf) for a balance of speed and eco-ness
 * Default: 7
 * Units: MPH
 * Vehicle Restart Required: No
@@ -196,7 +196,7 @@ Use this setting to adjust ACC Eco level 2 (two green leaves) for maximum eco-ne
 * Vehicle Restart Required: No
 * Min/Max values 1, 100
 
-## No steer alert 
+## No steer alert
 When this is enabled, you will hear a chime when your vehicle drops to a certain speed and can no longer be steered.
 * Default: On
 * Vehicle Restart Required: No
@@ -212,18 +212,19 @@ Use positive values if your device is to the left of center and negative if it's
 * Min/Max values -1, 1
 
 # Advanced settings
-These settings are for advanced users doing advanced things. 
+These settings are for advanced users doing advanced things.
 
-### Minimum Steer Check  
+### Minimum Steer Check
 When disabled, jvePilot will no longer put a minimum on steer speed.
-Requires a mod like a [hardware interceptor](https://github.com/xps-genesis/panda/tree/xps_wp_chrysler_basic).
-* Default: True 
+Requires WP Mod and works best with my version of the firmware.
+Flash it here: Branch/git `jvePilot-wp-mod` / https://github.com/j-vanetten/panda-wp-mod.git
+* Default: True
 * Vehicle Restart Required: Yes
 
 ### Vision Only
 When enabled, the model will no longer use any radar signals and rely on vision only.
-Enable this setting if you are seeing the lead car yellow triangle acting erratically.  
-* Default: False 
+Enable this setting if you are seeing the lead car yellow triangle acting erratically.
+* Default: False
 * Vehicle Restart Required: Yes
 
 ---
