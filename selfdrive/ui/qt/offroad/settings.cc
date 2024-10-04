@@ -185,13 +185,14 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
   connect(targetCarBtn, &ButtonControl::clicked, [=]() {
     QStringList cars = {
         "Auto detect",
-        "Jeep GC 2018",
-        "Jeep GC 2019",
+        "Grand Cherokee 2018",
+        "Grand Cherokee 2019",
         "Pacifica Hybrid 2017",
         "Pacifica Hybrid 2018",
         "Pacifica Hybrid 2019",
         "Pacifica 2018",
         "Pacifica 2020",
+        "Durango",
     };
 
     QString cur = QString::fromStdString(params.get("jvePilot.settings.selectedCar"));

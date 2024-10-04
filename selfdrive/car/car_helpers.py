@@ -167,10 +167,10 @@ def fingerprint(logcan, sendcan, num_pandas):
 
   selected = params.get("jvePilot.settings.selectedCar")
   print(f"Car override selected: {selected}")
-  if selected == b"Jeep GC 2018":
+  if selected == b"Grand Cherokee 2018":
     fw_candidates = [CHRYSLER_CAR.JEEP_GRAND_CHEROKEE]
     exact_fw_match = True
-  elif selected == b"Jeep GC 2019":
+  elif selected == b"Grand Cherokee 2019":
     fw_candidates = [CHRYSLER_CAR.JEEP_GRAND_CHEROKEE_2019]
     exact_fw_match = True
   elif selected == b"Pacifica Hybrid":
@@ -187,6 +187,9 @@ def fingerprint(logcan, sendcan, num_pandas):
     exact_fw_match = True
   elif selected == b"Pacifica 2020":
     fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2020]
+    exact_fw_match = True
+  elif selected == b"Durango":
+    fw_candidates = [CHRYSLER_CAR.DODGE_DURANGO]
     exact_fw_match = True
 
   car_fingerprint, finger = can_fingerprint(lambda: get_one_can(logcan))
