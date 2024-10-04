@@ -180,8 +180,8 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            this));
 
   // Make/Model/Year
-  targetCarBranchBtn = new ButtonControl(tr("Target Car"), tr("SELECT"));
-  connect(targetCarBranchBtn, &ButtonControl::clicked, [=]() {
+  targetCarBtn = new ButtonControl(tr("Target Car"), tr("SELECT"));
+  connect(targetCarBtn, &ButtonControl::clicked, [=]() {
     QStringList cars = {
         "Auto detect",
         "Jeep GC 2018",
@@ -197,11 +197,11 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
     QString selection = MultiOptionDialog::getSelection(tr("Select a car"), cars, cur, this);
     if (!selection.isEmpty()) {
       params.put("jvePilot.settings.selectedCar", selection.toStdString());
-      targetCarBranchBtn->setValue(QString::fromStdString(params.get("jvePilot.settings.selectedCar")));
+      targetCarBtn->setValue(QString::fromStdString(params.get("jvePilot.settings.selectedCar")));
       checkForUpdates();
     }
   });
-  addItem(targetCarBranchBtn);
+  addItem(targetCarBtn);
 }
 
 TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
