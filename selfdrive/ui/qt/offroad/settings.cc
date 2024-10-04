@@ -199,7 +199,6 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
     if (!selection.isEmpty()) {
       params.put("jvePilot.settings.selectedCar", selection.toStdString());
       targetCarBtn->setValue(QString::fromStdString(params.get("jvePilot.settings.selectedCar")));
-      checkForUpdates();
     }
   });
   addItem(targetCarBtn);
