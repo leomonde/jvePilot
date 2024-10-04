@@ -60,8 +60,13 @@ private:
 
 class JvePilotTogglesPanel : public ListWidget {
   Q_OBJECT
+
 public:
   explicit JvePilotTogglesPanel(QWidget *parent = nullptr);
+
+private:
+  Params params;
+  ButtonControl *targetCarBtn;
 };
 
 class TogglesPanel : public ListWidget {
@@ -101,7 +106,6 @@ private:
   ButtonControl *installBtn;
   ButtonControl *downloadBtn;
   ButtonControl *targetBranchBtn;
-  ButtonControl *targetCarBtn;
 
   Params params;
   ParamWatcher *fs_watch;
