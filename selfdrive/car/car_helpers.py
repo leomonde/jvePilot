@@ -167,7 +167,7 @@ def fingerprint(logcan, sendcan, num_pandas):
 
   params = Params()
 
-  selected = params.get("jvePilot.setting.selectedCar")
+  selected = params.get("jvePilot.settings.selectedCar")
   finger = gen_empty_fingerprint()
   if selected == "Jeep GC 2018":
     car_fingerprint = CHRYSLER_CAR.JEEP_GRAND_CHEROKEE
