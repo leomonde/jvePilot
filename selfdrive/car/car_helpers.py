@@ -13,6 +13,7 @@ from openpilot.common.swaglog import cloudlog
 import cereal.messaging as messaging
 from openpilot.selfdrive.car import gen_empty_fingerprint
 from openpilot.system.version import get_build_metadata
+from openpilot.selfdrive.car.chrysler.values import CAR as CHRYSLER_CAR
 
 FRAME_FINGERPRINT = 100  # 1s
 
@@ -163,6 +164,34 @@ def fingerprint(logcan, sendcan, num_pandas):
   # CAN fingerprint
   # drain CAN socket so we get the latest messages
   messaging.drain_sock_raw(logcan)
+
+  selected = params.get("jvePilot.settings.selectedCar")
+  print(f"Car override selected: {selected}")
+  if selected == b"Grand Cherokee 2018":
+    fw_candidates = [CHRYSLER_CAR.JEEP_GRAND_CHEROKEE]
+    exact_fw_match = True
+  elif selected == b"Grand Cherokee 2019":
+    fw_candidates = [CHRYSLER_CAR.JEEP_GRAND_CHEROKEE_2019]
+    exact_fw_match = True
+  elif selected == b"Pacifica Hybrid":
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2017_HYBRID]
+    exact_fw_match = True
+  elif selected == b"Pacifica Hybrid 2018":
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2018_HYBRID]
+    exact_fw_match = True
+  elif selected == b"Pacifica Hybrid 2019":
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2019_HYBRID]
+    exact_fw_match = True
+  elif selected == b"Pacifica":
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2018]
+    exact_fw_match = True
+  elif selected == b"Pacifica 2020":
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2020]
+    exact_fw_match = True
+  elif selected == b"Durango":
+    fw_candidates = [CHRYSLER_CAR.DODGE_DURANGO]
+    exact_fw_match = True
+
   car_fingerprint, finger = can_fingerprint(lambda: get_one_can(logcan))
 
   exact_match = True

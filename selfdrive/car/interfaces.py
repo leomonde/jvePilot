@@ -116,7 +116,7 @@ class CarInterfaceBase(ABC):
     return self.CC.update(c, self.CS, now_nanos)
 
   @staticmethod
-  def get_pid_accel_limits(CP, current_speed, cruise_speed):
+  def get_pid_accel_limits(CP, CS, current_speed, cruise_speed):
     return ACCEL_MIN, ACCEL_MAX
 
   @classmethod
@@ -139,7 +139,7 @@ class CarInterfaceBase(ABC):
     ret.minSteerSpeed = platform.config.specs.minSteerSpeed
     ret.tireStiffnessFactor = platform.config.specs.tireStiffnessFactor
     ret.axleRatio = platform.config.specs.axleRatio
-    ret.gearRatios = platform.config.specs.gearRatios
+    ret.gearRatios = [] if platform.config.specs.gearRatios == list[float] else platform.config.specs.gearRatios
     ret.flags |= int(platform.config.flags)
 
     ret = cls._get_params(ret, candidate, fingerprint, car_fw, experimental_long, docs)

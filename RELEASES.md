@@ -1,6 +1,10 @@
-Version jvePilot-0.9.7(v3.16.3)
+Version jvePilot-0.9.7(v3.16.4)
 ========================
 Visit http://bit.ly/jvereadme for more information
+* Support to manually select a vehicle
+
+Version jvePilot-0.9.7(v3.16.3)
+========================
 * Support for new WP firmware that give jvePilot control of it
   * Only enables WP when lateral control is need to remove hard steering when not needed
   * Autodetect the WP and enables automatically without the need to manually enable in setting
