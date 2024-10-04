@@ -165,26 +165,30 @@ def fingerprint(logcan, sendcan, num_pandas):
   # drain CAN socket so we get the latest messages
   messaging.drain_sock_raw(logcan)
 
-  params = Params()
-
   selected = params.get("jvePilot.settings.selectedCar")
-  finger = gen_empty_fingerprint()
   if selected == "Jeep GC 2018":
-    car_fingerprint = CHRYSLER_CAR.JEEP_GRAND_CHEROKEE
+    fw_candidates = [CHRYSLER_CAR.JEEP_GRAND_CHEROKEE]
+    exact_fw_match = True
   elif selected == "Jeep GC 2019":
-    car_fingerprint = CHRYSLER_CAR.JEEP_GRAND_CHEROKEE_2019
+    fw_candidates = [CHRYSLER_CAR.JEEP_GRAND_CHEROKEE_2019]
+    exact_fw_match = True
   elif selected == "Pacifica Hybrid":
-    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2017_HYBRID
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2017_HYBRID]
+    exact_fw_match = True
   elif selected == "Pacifica Hybrid 2018":
-    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2018_HYBRID
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2018_HYBRID]
+    exact_fw_match = True
   elif selected == "Pacifica Hybrid 2019":
-    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2019_HYBRID
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2019_HYBRID]
+    exact_fw_match = True
   elif selected == "Pacifica":
-    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2018
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2018]
+    exact_fw_match = True
   elif selected == "Pacifica 2020":
-    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2020
-  else:
-    car_fingerprint, finger = can_fingerprint(lambda: get_one_can(logcan))
+    fw_candidates = [CHRYSLER_CAR.CHRYSLER_PACIFICA_2020]
+    exact_fw_match = True
+
+  car_fingerprint, finger = can_fingerprint(lambda: get_one_can(logcan))
 
   exact_match = True
   source = car.CarParams.FingerprintSource.can
