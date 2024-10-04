@@ -13,6 +13,7 @@ from openpilot.common.swaglog import cloudlog
 import cereal.messaging as messaging
 from openpilot.selfdrive.car import gen_empty_fingerprint
 from openpilot.system.version import get_build_metadata
+from openpilot.selfdrive.car.chrysler.values import CAR as CHRYSLER_CAR
 
 FRAME_FINGERPRINT = 100  # 1s
 
@@ -163,7 +164,27 @@ def fingerprint(logcan, sendcan, num_pandas):
   # CAN fingerprint
   # drain CAN socket so we get the latest messages
   messaging.drain_sock_raw(logcan)
-  car_fingerprint, finger = can_fingerprint(lambda: get_one_can(logcan))
+
+  params = Params()
+
+  selected = params.get("jvePilot.setting.selectedCar")
+  finger = gen_empty_fingerprint()
+  if selected == "Jeep GC 2018":
+    car_fingerprint = CHRYSLER_CAR.JEEP_GRAND_CHEROKEE
+  elif selected == "Jeep GC 2019":
+    car_fingerprint = CHRYSLER_CAR.JEEP_GRAND_CHEROKEE_2019
+  elif selected == "Pacifica Hybrid":
+    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2017_HYBRID
+  elif selected == "Pacifica Hybrid 2018":
+    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2018_HYBRID
+  elif selected == "Pacifica Hybrid 2019":
+    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2019_HYBRID
+  elif selected == "Pacifica":
+    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2018
+  elif selected == "Pacifica 2020":
+    car_fingerprint = CHRYSLER_CAR.CHRYSLER_PACIFICA_2020
+  else:
+    car_fingerprint, finger = can_fingerprint(lambda: get_one_can(logcan))
 
   exact_match = True
   source = car.CarParams.FingerprintSource.can

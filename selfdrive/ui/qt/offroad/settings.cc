@@ -178,6 +178,30 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "Enable this setting if the lead car yellow triangle is reversed on the X axis",
                            "../assets/offroad/icon_calibration.png",
                            this));
+
+  // Make/Model/Year
+  targetCarBranchBtn = new ButtonControl(tr("Target Car"), tr("SELECT"));
+  connect(targetCarBranchBtn, &ButtonControl::clicked, [=]() {
+    QStringList cars = {
+        "Auto detect",
+        "Jeep GC 2018",
+        "Jeep GC 2019",
+        "Pacifica Hybrid 2017",
+        "Pacifica Hybrid 2018",
+        "Pacifica Hybrid 2019",
+        "Pacifica 2018",
+        "Pacifica 2020",
+    };
+
+    QString cur = QString::fromStdString(params.get("jvePilot.settings.selectedCar"));
+    QString selection = MultiOptionDialog::getSelection(tr("Select a car"), cars, cur, this);
+    if (!selection.isEmpty()) {
+      params.put("jvePilot.settings.selectedCar", selection.toStdString());
+      targetCarBranchBtn->setValue(QString::fromStdString(params.get("jvePilot.settings.selectedCar")));
+      checkForUpdates();
+    }
+  });
+  addItem(targetCarBranchBtn);
 }
 
 TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {

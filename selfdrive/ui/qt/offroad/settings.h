@@ -101,6 +101,7 @@ private:
   ButtonControl *installBtn;
   ButtonControl *downloadBtn;
   ButtonControl *targetBranchBtn;
+  ButtonControl *targetCarBtn;
 
   Params params;
   ParamWatcher *fs_watch;
