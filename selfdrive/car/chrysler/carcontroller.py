@@ -89,7 +89,7 @@ class CarController(CarControllerBase):
 
     # steering
     new_steer = int(round(CC.actuators.steer * self.params.STEER_MAX))
-    if self.frame % self.params.STEER_STEP == 0 or abs(new_steer - int(self.apply_steer_last)) > self.cachedParams.get_float('jvePilot.settings.steer.chillLevel', 1000):
+    if self.frame % self.params.STEER_STEP == 0:
       lkas_control_bit = self.lkas_control_bit_prev
       if CS.out.vEgo > self.CP.minSteerSpeed or self.steerNoMinimum:
         lkas_control_bit = CC.latActive

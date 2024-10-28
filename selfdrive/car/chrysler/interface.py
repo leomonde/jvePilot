@@ -62,10 +62,11 @@ class CarInterface(CarInterfaceBase):
     # Chrysler
     if candidate in (CAR.CHRYSLER_PACIFICA_2017_HYBRID, CAR.CHRYSLER_PACIFICA_2018, CAR.CHRYSLER_PACIFICA_2018_HYBRID, \
                      CAR.CHRYSLER_PACIFICA_2019_HYBRID, CAR.CHRYSLER_PACIFICA_2020, CAR.DODGE_DURANGO):
-      ret.lateralTuning.init('pid')
-      ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[9., 20.], [9., 20.]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
-      ret.lateralTuning.pid.kf = 0.00006
+      if not params.get_bool("jvePilot.settings.steer.torque"):
+        ret.lateralTuning.init('pid')
+        ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[9., 20.], [9., 20.]]
+        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
+        ret.lateralTuning.pid.kf = 0.00006
 
       ret.experimentalLongitudinalAvailable = False # candidate not in HYBRID_CARS
 
@@ -73,10 +74,11 @@ class CarInterface(CarInterfaceBase):
     elif candidate in (CAR.JEEP_GRAND_CHEROKEE, CAR.JEEP_GRAND_CHEROKEE_2019):
       ret.steerActuatorDelay = 0.2
 
-      # ret.lateralTuning.init('pid')
-      # ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[9., 20.], [9., 20.]]
-      # ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
-      # ret.lateralTuning.pid.kf = 0.00006
+      if not params.get_bool("jvePilot.settings.steer.torque"):
+        ret.lateralTuning.init('pid')
+        ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[9., 20.], [9., 20.]]
+        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.15, 0.30], [0.03, 0.05]]
+        ret.lateralTuning.pid.kf = 0.00006
 
       ret.enableBsm = True
       ret.experimentalLongitudinalAvailable = True

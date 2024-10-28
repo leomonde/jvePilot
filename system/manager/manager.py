@@ -45,7 +45,7 @@ def manager_init() -> None:
     ("jvePilot.settings.audioAlertOnSteeringLoss", "1"),
     ("jvePilot.settings.steer.aolc", "1"),
     ("jvePilot.settings.steer.noMinimum", "0"),
-    ("jvePilot.settings.steer.chillLevel", "20"),
+    ("jvePilot.settings.steer.torque", "1"),
     ("jvePilot.settings.autoEnableAcc", "1"),
     ("jvePilot.settings.deviceOffset", "0.00"),
     ("jvePilot.settings.visionOnly", "0"),

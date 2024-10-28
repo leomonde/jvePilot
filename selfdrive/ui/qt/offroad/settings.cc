@@ -143,13 +143,6 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
         "Compensate for mounting your device off-center in the windshield."
         "\nFor example, 0.04 if your device is 4cm left of center."
         "\nNOTE: This is not how far the CAMERA is off-center, but how far the MOUNT/DEVICE is off-center."
-    },
-    { "jvePilot.settings.steer.chillLevel",
-      0, 200,
-      "Torque Chill Level",
-      "Default: 20, Min: 0, Max: 200\n"
-        "Torque changes above this value are more aggressive about adjusting to it."
-        "\nA higher value can help prevent steering osculation."
     }
   };
   addItem(new LabelControl("jvePilot Control Settings",
@@ -165,7 +158,12 @@ JvePilotTogglesPanel::JvePilotTogglesPanel(QWidget *parent) : ListWidget(parent)
                            "If you have a mod that allows OP to steering down to a stop, enable this.",
                            "../assets/jvepilot/settings/icon_wp_mod.png",
                            this));
-
+  // Torque Controller
+  addItem(new ParamControl("jvePilot.settings.steer.torque",
+                           "ADVANCED: Torque Controller",
+                           "Use the torque controller instead of PID for steering.",
+                           "../assets/img_chffr_wheel.png",
+                           this));
   // Vision Only
   addItem(new ParamControl("jvePilot.settings.visionOnly",
                            "ADVANCED: Vision only",
